@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # ------------
-# A apache host viewer to list all provided host and vhosts on current system.
+# An apache host viewer to list all provided host and vhosts on current system.
 #
 # @author    Björn Hempel <bjoern@hempel.li>
 # @version   1.0 (2017-05-12)
