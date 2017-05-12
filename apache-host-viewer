@@ -41,7 +41,7 @@ shopt -s nocasematch
 # @version 1.0 (2017-05-12)
 # ------------
 applicationExists() {
-  `which $1 >/dev/null`
+    `which $1 >/dev/null`
 }
 
 # ------------
