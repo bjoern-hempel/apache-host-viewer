@@ -15,7 +15,7 @@ user$ git clone git@github.com:bjoern-hempel/apache-host-viewer.git .
 
 ### 1.1) Simply markdown
 
-The script uses the DUMP_VHOSTS function from apachectl (apachectl -S). This requires sudo credentials:
+The script uses the DUMP_VHOSTS function from `apachectl` (`apachectl -S`). This requires sudo credentials:
 
 ```
 user$ sudo ./apache-host-viewer
