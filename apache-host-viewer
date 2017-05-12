@@ -88,9 +88,9 @@ getContentFromLineToMatch()
 # ------------
 # Tries to extract the complete virtual host block
 # in given file $file on line $lineFrom. Also replaces
-# include commands with the content of the given file.
-# Relative include paths will be extended with given
-# $serverRoot path.
+# include commands with the content of the that include
+# file. Relative include paths will be extended with
+# given $serverRoot path.
 #
 # @author  Björn Hempel <bjoern@hempel.li>
 # @version 1.0 (2017-05-12)
