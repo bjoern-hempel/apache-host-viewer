@@ -40,7 +40,8 @@ shopt -s nocasematch
 # @author  Björn Hempel  <bjoern@hempel.li>
 # @version 1.0 (2017-05-12)
 # ------------
-applicationExists() {
+applicationExists()
+{
     `which $1 >/dev/null`
 }
 
