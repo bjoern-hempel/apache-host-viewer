@@ -1,0 +1,225 @@
+#!/bin/bash
+
+# ------------
+# A apache host viewer to list all provided host and vhosts on current system.
+#
+# @author    Björn Hempel <bjoern@hempel.li>
+# @version   1.0 (2017-05-12)
+#
+# @copyright MIT License
+# @copyright
+# @copyright Copyright (c) 2017 Björn Hempel
+# @copyright
+# @copyright Permission is hereby granted, free of charge, to any person obtaining a copy
+# @copyright of this software and associated documentation files (the "Software"), to deal
+# @copyright in the Software without restriction, including without limitation the rights
+# @copyright to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# @copyright copies of the Software, and to permit persons to whom the Software is
+# @copyright furnished to do so, subject to the following conditions:
+# @copyright
+# @copyright The above copyright notice and this permission notice shall be included in all
+# @copyright copies or substantial portions of the Software.
+# @copyright
+# @copyright THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# @copyright IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# @copyright FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# @copyright AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# @copyright LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# @copyright OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# @copyright SOFTWARE.
+# @copyright
+# @copyright Written by Björn Hempel <bjoern@hempel.li>.
+# ------------
+
+# makes the regexp search case insensitive
+shopt -s nocasematch
+
+# ------------
+# Check if a given application exists.
+#
+# @author  Björn Hempel  <bjoern@hempel.li>
+# @version 1.0 (2017-05-12)
+# ------------
+applicationExists() {
+  `which $1 >/dev/null`
+}
+
+# ------------
+# Returns the content from a given file from line $lineFrom to the first match
+# string $matchString or until the end of the file.
+#
+# @author  Björn Hempel <bjoern@hempel.li>
+# @version 1.0 (2017-05-12)
+# ------------
+getContentFromLineToMatch()
+{
+    local        file="$1"
+    local    lineFrom=$2
+    local matchString="$3"
+
+    if [ ! -f "$file" ]; then
+        echo -n "" && return 1
+    fi
+
+    # helper variables
+    local         lines=0
+    local         found=false
+    local    serverRoot='/etc/apache2'
+    local possibleLines=$(tail -n+$lineFrom "$file" | wc -l)
+
+    # try to find the end tag of VirtualHost (</VirtualHost>)
+    if [ $possibleLines -gt 0 ]; then
+        while ! $found; do
+            ((lines++))
+
+            local content=$(tail -n+$lineFrom "$file" | head -n$lines)
+
+            # $matchString found -> stop here
+            [[ "$content" =~ "$matchString" ]] && found=true
+
+            # end of file reached
+            [ $lines -ge $possibleLines ] && found=true
+        done
+    fi
+
+    echo "$content" && return 0
+}
+
+# ------------
+# Tries to extract the complete virtual host block
+# in given file $file on line $lineFrom. Also replaces
+# include commands with the content of the given file.
+# Relative include paths will be extended with given
+# $serverRoot path.
+#
+# @author  Björn Hempel <bjoern@hempel.li>
+# @version 1.0 (2017-05-12)
+# ------------
+getVirtualHost()
+{
+    shopt -s nocasematch
+
+    local        file="$1"
+    local    lineFrom=$2
+    local matchString='</VirtualHost>'
+    local  serverRoot="$3"
+
+    local content=$(getContentFromLineToMatch "$file" $lineFrom "$matchString")
+    local lastStatus=$?
+
+    # no content found
+    if [ $lastStatus -gt 0 ]; then
+        echo -n "" && return $lastStatus
+    fi
+
+    # replace all "include paths"
+    while [[ "$content" =~ (^|$'\n')([[:space:]]*)(include[[:space:]]+)([a-z0-9/.-]+) ]]; do
+        local fullstring="${BASH_REMATCH[3]}${BASH_REMATCH[4]}"
+        local includePath="$serverRoot/${BASH_REMATCH[4]}"
+        local includeContent=$(cat "$includePath")
+
+        content=$(echo "${content//$fullstring/$includeContent}")
+    done
+
+    echo "$content"
+    return 0
+}
+
+# ------------
+# Tries to extracts the document root from given virtual config block
+# in given $file on line $lineFrom. 
+#
+# @author  Björn Hempel <bjoern@hempel.li>
+# @version 1.0 (2017-05-12)
+# ------------
+getDocumentRootFromVirtualHost()
+{
+    shopt -s nocasematch
+
+    local       file="$1"
+    local   lineFrom=$2
+    local serverRoot="$3"
+
+    local virtualHost=$(getVirtualHost "$file" $lineFrom "$serverRoot")
+
+    local documentRoot=$(echo "$virtualHost" | grep "DocumentRoot")
+
+    if [[ "$documentRoot" =~ ([\t ]*DocumentRoot[\t ]+)([a-z0-9/.-]+) ]]; then
+        echo "${BASH_REMATCH[2]}"
+    fi
+}
+
+# check the current used user
+userId=$(id -u)
+
+# the command apachectl needs root credentials
+if [[ $userId -ne 0 ]]; then
+    echo "Please run this script as root."
+    echo "sudo $0 ..."
+    exit 1
+fi
+
+# check that idn is installed
+if ! applicationExists idn; then
+    echo 'The package "idn" is not installed. Please install this package before continue:'
+    echo '$ sudo apt install idn'
+    exit
+fi
+
+lines=$(apachectl -S | grep -E "(namevhost|alias)")
+serverRoot=$(apachectl -S | grep ServerRoot | awk '{print $2}' | sed -e 's/^"//' -e 's/"$//')
+
+# last port, last domain, last config
+  port=""
+domain=""
+config=""
+
+# save all hosts including the scheme within this container
+declare -A schemeHostsContainer
+
+# iterate through the returned virtual hosts configs from apachectl
+while read -r line; do
+    alias=$(echo "$line" | grep "alias")
+
+    if [ "$alias" != "" ]; then
+        domain=$(echo "$line" | awk '{print $2}')
+    else
+          port=$(echo "$line" | awk '{print $2}')
+        domain=$(echo "$line" | awk '{print $4}')
+        config=$(echo "$line" | awk '{print $5}')
+    fi
+
+    path=$(shopt -s nocasematch && [[ "$config" =~ \(([./a-z0-9\-]+) ]] && echo "${BASH_REMATCH[1]}")
+    line=$(shopt -s nocasematch && [[ "$config" =~ :([0-9]+)\) ]] && echo "${BASH_REMATCH[1]}")
+
+    [[ "$domain" =~ xn-- ]] && domain=$(echo "$domain" | idn --idna-to-unicode)
+
+    if [ $port -eq 443 ]; then
+        domain="https://$domain"
+    else
+        domain="http://$domain"
+    fi
+
+    documentRoot=$(getDocumentRootFromVirtualHost "$path" $line "$serverRoot")
+
+    currentDomainString="${schemeHostsContainer[$documentRoot]}"
+
+    if [ "$currentDomainString" != "" ]; then
+        schemeHostsContainer[$documentRoot]="$currentDomainString"$'\n'"$domain"
+    else
+        schemeHostsContainer[$documentRoot]="$domain"
+    fi
+
+done <<< "$lines"
+
+# output markdown
+for documentRoot in "${!schemeHostsContainer[@]}"; do
+    echo "- $documentRoot"
+
+    readarray -t schemeHosts <<< "${schemeHostsContainer[$documentRoot]}"
+    
+    for schemeHost in "${schemeHosts[@]}"; do
+        echo "  - $schemeHost"
+    done
+done
+
