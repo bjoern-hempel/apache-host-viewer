@@ -63,6 +63,12 @@ if [[ $userId -ne 0 ]]; then
     exit 1
 fi
 
+# check that apachectl is installed
+if ! applicationExists apachectl; then
+    echo 'It seems that the apache is not installed on this system. Do this before continue.'
+    exit
+fi
+
 lines=$(apachectl -S | grep -E "(namevhost|alias)")
 serverRoot=$(apachectl -S | grep ServerRoot | awk '{print $2}' | sed -e 's/^"//' -e 's/"$//')
 
