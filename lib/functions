@@ -265,16 +265,12 @@ getMarkdownOfSystemAndDocumentRoots()
         echo '| hd-size-gb | '$(getHdSizeGb)' |'
         echo '| updateable-application-number | '$(getNumberOfInstallableApplications)' |'
 
-#        local users=$(getUsers)
-#        echo '    "users":                         ['
-#        local counter=0
-#        while read -r user; do
-#            [ $counter -gt 0 ] && echo ","
-#            echo -n "                                         \"$user\""
-#            ((counter++))
-#        done <<< "$users"
-#        echo
-#        echo '                                     ],'
+        local users=$(getUsers)
+        local counter=1
+        while read -r user; do
+            echo "| user $counter | $user |"
+            ((counter++))
+        done <<< "$users"
 
         echo 
     fi
