@@ -8,6 +8,7 @@ JSON_OUTPUT=false
 COMPRESS_JSON=false
 MARKDOWN_OUTPUT=true
 SHOW_SYSTEM_INFORMATIONS=false
+DOCKER_NAME=""
 
 # read arguments
 # help:
@@ -38,6 +39,16 @@ while [[ $# > 0 ]]; do
         # help:
         -s|--show-system-info)
             SHOW_SYSTEM_INFORMATIONS=true
+            ;;
+
+        # help:  -s,    --show-system-info        Shows system informations.
+        # help:
+        -d|--docker-container)
+            DOCKER_NAME="$2"
+            shift
+            ;;
+        -d=*|--docker-container=*)
+            DOCKER_NAME=("${1#*=}")
             ;;
 
         #

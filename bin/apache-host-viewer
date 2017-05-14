@@ -51,6 +51,7 @@ fi
 
 # include some libraries
 source "$pathRoot/lib/functions"
+source "$pathRoot/lib/docker"
 source "$pathRoot/lib/parameter"
 
 # check the current used user
@@ -63,14 +64,19 @@ if [[ $userId -ne 0 ]]; then
     exit 1
 fi
 
-# check that apachectl is installed
-if ! applicationExists apachectl; then
-    echo 'It seems that the apache is not installed on this system. Do this before continue.'
-    exit
-fi
+if [ "$DOCKER_NAME" != "" ]; then
+    lines=$(docker exec -it $DOCKER_NAME apachectl -S | grep -E "(namevhost|alias)")
+    serverRoot=$(docker exec -it $DOCKER_NAME apachectl -S | grep ServerRoot | awk '{print $2}' | sed -e 's/"//g')
+else
+    # check that apachectl is installed
+    if ! applicationExists apachectl; then
+        echo 'It seems that the apache is not installed on this system. Do this before continue.'
+        exit
+    fi
 
-lines=$(apachectl -S | grep -E "(namevhost|alias)")
-serverRoot=$(apachectl -S | grep ServerRoot | awk '{print $2}' | sed -e 's/^"//' -e 's/"$//')
+    lines=$(apachectl -S | grep -E "(namevhost|alias)")
+    serverRoot=$(apachectl -S | grep ServerRoot | awk '{print $2}' | sed -e 's/^"//' -e 's/"$//')
+fi
 
 # last port, last domain, last config
   port=""
@@ -80,8 +86,14 @@ config=""
 # save all hosts including the scheme within this container
 declare -A schemeHostsContainer
 
-# iterate through the returned virtual hosts configs from apachectl
+# split lines from apachectl config output
+lineArray=()
 while read -r line; do
+    lineArray+=("$line")
+done <<< "$lines"
+
+# iterate through the returned virtual hosts configs from apachectl
+for line in "${lineArray[@]}"; do
     alias=$(echo "$line" | grep "alias")
 
     if [ "$alias" != "" ]; then
@@ -112,8 +124,7 @@ while read -r line; do
         domain="http://$domain"
     fi
 
-    documentRoot=$(getDocumentRootFromVirtualHost "$path" $line "$serverRoot")
-
+    documentRoot=$(getDocumentRootFromVirtualHost "/etc/apache2/sites-enabled/http.conf" 5 "/etc/apache2" "$DOCKER_NAME")
     currentDomainString="${schemeHostsContainer[$documentRoot]}"
 
     if [ "$currentDomainString" != "" ]; then
@@ -121,8 +132,7 @@ while read -r line; do
     else
         schemeHostsContainer[$documentRoot]="$domain"
     fi
-
-done <<< "$lines"
+done
 
 # output markdown
 if $MARKDOWN_OUTPUT; then

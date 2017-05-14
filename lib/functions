@@ -23,8 +23,10 @@ getContentFromLineToMatch()
     local        file="$1"
     local    lineFrom=$2
     local matchString="$3"
+    local  dockerName="$4"
 
-    if [ ! -f "$file" ]; then
+    # check if file exists
+    if ! fileExistsLocallyOrOnDocker "$file" "$dockerName"; then
         echo -n "" && return 1
     fi
 
@@ -32,14 +34,20 @@ getContentFromLineToMatch()
     local         lines=0
     local         found=false
     local    serverRoot='/etc/apache2'
-    local possibleLines=$(tail -n+$lineFrom "$file" | wc -l)
+    local possibleLines=$(executeLocallyOrOnDocker "cat \"$file\" | tail -n+$lineFrom" "$dockerName")
+
+    possibleLines=$(echo "$possibleLines" | wc -l)
 
     # try to find the end tag of VirtualHost (</VirtualHost>)
     if [ $possibleLines -gt 0 ]; then
         while ! $found; do
             ((lines++))
 
-            local content=$(tail -n+$lineFrom "$file" | head -n$lines)
+            if [ "$dockerName" != "" ]; then
+                local content=$(docker exec -it $dockerName cat "$file" | tail -n+$lineFrom | head -n$lines)
+            else
+                local content=$(tail -n+$lineFrom "$file" | head -n$lines)
+            fi
 
             # $matchString found -> stop here
             [[ "$content" =~ "$matchString" ]] && found=true
@@ -70,8 +78,9 @@ getVirtualHost()
     local    lineFrom=$2
     local matchString='</VirtualHost>'
     local  serverRoot="$3"
+    local  dockerName="$4"
 
-    local content=$(getContentFromLineToMatch "$file" $lineFrom "$matchString")
+    local content=$(getContentFromLineToMatch "$file" $lineFrom "$matchString" "$dockerName")
     local lastStatus=$?
 
     # no content found
@@ -83,7 +92,12 @@ getVirtualHost()
     while [[ "$content" =~ (^|$'\n')([[:space:]]*)(include[[:space:]]+)([a-z0-9/.-]+) ]]; do
         local fullstring="${BASH_REMATCH[3]}${BASH_REMATCH[4]}"
         local includePath="$serverRoot/${BASH_REMATCH[4]}"
-        local includeContent=$(cat "$includePath")
+
+        if [ "$dockerName" != "" ]; then
+            local includeContent=$(docker exec -it $dockerName cat "$includePath")
+        else
+            local includeContent=$(cat "$includePath")
+        fi
 
         content=$(echo "${content//$fullstring/$includeContent}")
     done
@@ -106,13 +120,29 @@ getDocumentRootFromVirtualHost()
     local       file="$1"
     local   lineFrom=$2
     local serverRoot="$3"
+    local dockerName="$4"
 
-    local virtualHost=$(getVirtualHost "$file" $lineFrom "$serverRoot")
+    local virtualHost=$(getVirtualHost "$file" $lineFrom "$serverRoot" "$dockerName")
 
     local documentRoot=$(echo "$virtualHost" | grep "DocumentRoot")
+    local proxyPass=$(echo "$virtualHost" | grep "ProxyPass[ $'\t']")
 
-    if [[ "$documentRoot" =~ ([\t ]*DocumentRoot[\t ]+)([a-z0-9/.-]+) ]]; then
-        echo "${BASH_REMATCH[2]}"
+    if [ "$documentRoot" != "" ]; then
+        if [[ "$documentRoot" =~ ([\t ]*DocumentRoot[\t ]+)([a-z0-9/.-]+) ]]; then
+            echo "${BASH_REMATCH[2]}"
+            return 0
+        else
+            return 1
+        fi
+    fi
+
+    if [ "$proxyPass" != "" ]; then
+        if [[ "$proxyPass" =~ ([\t ]*ProxyPass[\t ]+[a-z0-9/.-]+[\t ]+)([a-z0-9/.:-]+) ]]; then
+            echo "${BASH_REMATCH[2]}"
+            return 0
+        else
+            return 1
+        fi
     fi
 }
 

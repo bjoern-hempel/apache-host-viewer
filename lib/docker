@@ -1,0 +1,40 @@
+#!/bin/bash
+
+# ------------
+# Execute given command locally or on docker applience.
+#
+# @author  Björn Hempel  <bjoern@hempel.li>
+# @version 1.0 (2017-05-14)
+# ------------
+executeLocallyOrOnDocker()
+{
+    local command="$1"
+    local dockerName="$2"
+
+    if [ "$dockerName" != "" ]; then
+        docker exec -it ixno.reverse.proxy sh -c "$command"
+
+        local lastExitCode=$?
+    else
+        $command
+
+        local lastExitCode=$?
+    fi
+
+    return $lastExitCode
+}
+
+# ------------
+# Check if file exists. Locally or on docker applience.
+#
+# @author  Björn Hempel  <bjoern@hempel.li>
+# @version 1.0 (2017-05-14)
+# ------------
+fileExistsLocallyOrOnDocker()
+{
+    local file="$1"
+    local dockerName="$2"
+
+    return $(executeLocallyOrOnDocker "[ -f \"$file\" ] || exit 1" "$dockerName")
+}
+
