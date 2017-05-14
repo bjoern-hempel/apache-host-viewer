@@ -1,0 +1,37 @@
+#!/bin/bash
+
+# declare parameter list array
+PARAMETERS=()
+
+# default parameter
+JSON_OUTPUT=false
+MARKDOWN_OUTPUT=true
+
+# read arguments
+# help:
+# help: Usage: %scriptname% [options...]
+while [[ $# > 0 ]]; do
+    case "$1" in
+        # help:  -h,    --help                    Shows this help.
+        # help:
+        -h|--help)
+            cat "$pathRoot/lib/parameter" | grep "# help:" | grep -v 'cat parameter' | sed 's/[ ]*# help:[ ]\?//g' | sed "s~%scriptname%~$scriptname~g"
+            exit 0
+            ;;
+
+        # help:  -j,    --json                    Shows the output as json and disable the markdown output
+        # help:
+        -j|--json)
+            JSON_OUTPUT=true
+            MARKDOWN_OUTPUT=false
+            ;;
+
+        #
+        # collect all unknown parameters
+        #
+        *)
+            PARAMETERS+=("$1")
+            ;;
+    esac
+    shift
+done

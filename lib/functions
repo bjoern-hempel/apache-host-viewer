@@ -1,0 +1,218 @@
+#!/bin/bash
+
+# ------------
+# Check if a given application exists.
+#
+# @author  Björn Hempel  <bjoern@hempel.li>
+# @version 1.0 (2017-05-12)
+# ------------
+applicationExists()
+{
+    `which $1 >/dev/null`
+}
+
+# ------------
+# Returns the content from a given file from line $lineFrom to the first match
+# string $matchString or until the end of the file.
+#
+# @author  Björn Hempel <bjoern@hempel.li>
+# @version 1.0 (2017-05-12)
+# ------------
+getContentFromLineToMatch()
+{
+    local        file="$1"
+    local    lineFrom=$2
+    local matchString="$3"
+
+    if [ ! -f "$file" ]; then
+        echo -n "" && return 1
+    fi
+
+    # helper variables
+    local         lines=0
+    local         found=false
+    local    serverRoot='/etc/apache2'
+    local possibleLines=$(tail -n+$lineFrom "$file" | wc -l)
+
+    # try to find the end tag of VirtualHost (</VirtualHost>)
+    if [ $possibleLines -gt 0 ]; then
+        while ! $found; do
+            ((lines++))
+
+            local content=$(tail -n+$lineFrom "$file" | head -n$lines)
+
+            # $matchString found -> stop here
+            [[ "$content" =~ "$matchString" ]] && found=true
+
+            # end of file reached
+            [ $lines -ge $possibleLines ] && found=true
+        done
+    fi
+
+    echo "$content" && return 0
+}
+
+# ------------
+# Tries to extract the complete virtual host block
+# in given file $file on line $lineFrom. The function
+# also replaces include commands with the content of
+# the that include file. Relative include paths will
+# be extended with given $serverRoot path.
+#
+# @author  Björn Hempel <bjoern@hempel.li>
+# @version 1.0 (2017-05-12)
+# ------------
+getVirtualHost()
+{
+    shopt -s nocasematch
+
+    local        file="$1"
+    local    lineFrom=$2
+    local matchString='</VirtualHost>'
+    local  serverRoot="$3"
+
+    local content=$(getContentFromLineToMatch "$file" $lineFrom "$matchString")
+    local lastStatus=$?
+
+    # no content found
+    if [ $lastStatus -gt 0 ]; then
+        echo -n "" && return $lastStatus
+    fi
+
+    # replace all "include paths"
+    while [[ "$content" =~ (^|$'\n')([[:space:]]*)(include[[:space:]]+)([a-z0-9/.-]+) ]]; do
+        local fullstring="${BASH_REMATCH[3]}${BASH_REMATCH[4]}"
+        local includePath="$serverRoot/${BASH_REMATCH[4]}"
+        local includeContent=$(cat "$includePath")
+
+        content=$(echo "${content//$fullstring/$includeContent}")
+    done
+
+    echo "$content"
+    return 0
+}
+
+# ------------
+# Tries to extracts the document root from given virtual config block
+# in given $file on line $lineFrom. 
+#
+# @author  Björn Hempel <bjoern@hempel.li>
+# @version 1.0 (2017-05-12)
+# ------------
+getDocumentRootFromVirtualHost()
+{
+    shopt -s nocasematch
+
+    local       file="$1"
+    local   lineFrom=$2
+    local serverRoot="$3"
+
+    local virtualHost=$(getVirtualHost "$file" $lineFrom "$serverRoot")
+
+    local documentRoot=$(echo "$virtualHost" | grep "DocumentRoot")
+
+    if [[ "$documentRoot" =~ ([\t ]*DocumentRoot[\t ]+)([a-z0-9/.-]+) ]]; then
+        echo "${BASH_REMATCH[2]}"
+    fi
+}
+
+# ------------
+# Gets the number of cpus.
+#
+# @author  Björn Hempel <bjoern@hempel.li>
+# @version 1.0 (2017-05-14)
+# ------------
+getNumberOfCpus()
+{
+    cat /proc/cpuinfo | grep "processor" | wc -l
+}
+
+# ------------
+# Gets the ram size in gb.
+#
+# @author  Björn Hempel <bjoern@hempel.li>
+# @version 1.0 (2017-05-14)
+# ------------
+getRamSizeGb()
+{
+    free | grep 'Mem:' | awk '{print $2/1024/1024}'
+}
+
+# ------------
+# Gets the hd size in gb.
+#
+# @author  Björn Hempel <bjoern@hempel.li>
+# @version 1.0 (2017-05-14)
+# ------------
+getHdSizeGb()
+{
+    df -h | grep '^/dev/' | grep -v 'boot' | awk '{print $2*1}'
+}
+
+# ------------
+# Gets all users.
+#
+# @author  Björn Hempel <bjoern@hempel.li>
+# @version 1.0 (2017-05-14)
+# ------------
+getUsers()
+{
+    cat /etc/passwd | grep ':[0-9]\+:100:' | awk -F: '{ st = index($0,":"); print $1}'
+}
+
+# ------------
+# Gets the os name and version.
+#
+# @author  Björn Hempel <bjoern@hempel.li>
+# @version 1.0 (2017-05-14)
+# ------------
+getOSName()
+{
+    OS=$(uname -s)
+    REV=$(uname -r)
+    MACH=$(uname -m)
+
+    if [ "${OS}" = "SunOS" ] ; then
+        OS=Solaris
+        ARCH=$(uname -p)
+        OSSTR="${OS} ${REV}(${ARCH} $(uname -v))"
+    elif [ "${OS}" = "AIX" ] ; then
+        OSSTR="${OS} $(oslevel) ($(oslevel -r))"
+    elif [ "${OS}" = "Linux" ] ; then
+        KERNEL=$(uname -r)
+        if [ -f /etc/redhat-release ] ; then
+            DIST='RedHat'
+            PSUEDONAME=$(cat /etc/redhat-release | sed s/.*\(// | sed s/\)//)" "
+            REV=$(cat /etc/redhat-release | sed s/.*release\ // | sed s/\ .*//)
+        elif [ -f /etc/SuSE-release ] ; then
+            DIST=$(cat /etc/SuSE-release | tr "\n" ' '| sed s/VERSION.*//)
+            REV=$(cat /etc/SuSE-release | tr "\n" ' ' | sed s/.*=\ //)
+        elif [ -f /etc/mandrake-release ] ; then
+            DIST='Mandrake'
+            PSUEDONAME=$(cat /etc/mandrake-release | sed s/.*\(// | sed s/\)//)" "
+            REV=$(cat /etc/mandrake-release | sed s/.*release\ // | sed s/\ .*//)
+        elif [ -f /etc/debian_version ] ; then
+            DIST="Debian $(cat /etc/debian_version)"
+            REV=""
+        fi
+        if [ -f /etc/UnitedLinux-release ] ; then
+            DIST="${DIST}[$(cat /etc/UnitedLinux-release | tr "\n" ' ' | sed s/VERSION.*//)]"
+        fi
+
+        OSSTR="${OS} ${DIST} ${REV}(${PSUEDONAME}${KERNEL} ${MACH})"
+    fi
+
+    echo ${OSSTR}
+}
+
+# ------------
+# Gets the number of updateable applications.
+#
+# @author  Björn Hempel <bjoern@hempel.li>
+# @version 1.0 (2017-05-14)
+# ------------
+getNumberOfInstallableApplications()
+{
+    aptitude search '~U' | wc -l
+}
+
