@@ -5,7 +5,9 @@ PARAMETERS=()
 
 # default parameter
 JSON_OUTPUT=false
+COMPRESS_JSON=false
 MARKDOWN_OUTPUT=true
+SHOW_SYSTEM_INFORMATIONS=false
 
 # read arguments
 # help:
@@ -24,6 +26,18 @@ while [[ $# > 0 ]]; do
         -j|--json)
             JSON_OUTPUT=true
             MARKDOWN_OUTPUT=false
+            ;;
+
+        # help:         --compress-json           Compress the outputted json.
+        # help:
+        --compress-json)
+            COMPRESS_JSON=true
+            ;;
+
+        # help:  -s,    --show-system-info        Shows system informations.
+        # help:
+        -s|--show-system-info)
+            SHOW_SYSTEM_INFORMATIONS=true
             ;;
 
         #

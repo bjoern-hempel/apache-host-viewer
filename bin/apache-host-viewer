@@ -120,40 +120,18 @@ done <<< "$lines"
 
 # output markdown
 if $MARKDOWN_OUTPUT; then
-    for documentRoot in "${!schemeHostsContainer[@]}"; do
-        echo "- $documentRoot"
-
-        readarray -t schemeHosts <<< "${schemeHostsContainer[$documentRoot]}"
-    
-        for schemeHost in "${schemeHosts[@]}"; do
-            echo "  - $schemeHost"
-        done
-    done
+    markdownOutput=$(getMarkdownOfSystemAndDocumentRoots)
+    echo "$markdownOutput"
 fi
 
 # json output
 if $JSON_OUTPUT; then
-    users=$(getUsers)
+    jsonOutput=$(getJsonOfSystemAndDocumentRoots)
 
-    echo '{'
-    echo '    "os-name-full":                  "'$(getOSName)'",'
-    echo '    "number-of-cpus":                '$(getNumberOfCpus)','
-    echo '    "ram-size-gb":                   '$(getRamSizeGb)','
-    echo '    "hd-size-gb":                    '$(getHdSizeGb)','
-    echo '    "users":                         ['
+    if $COMPRESS_JSON; then
+        jsonOutput=$(compressJson "$jsonOutput")
+    fi
 
-    counter=0
-    while read -r user; do
-        if [ $counter -gt 0 ]; then
-            echo ","
-        fi
-        echo -n "                                         \"$user\""
-        ((counter++))
-    done <<< "$users"
-    echo
-
-    echo '                                     ],'
-    echo '    "updateable-application-number": 0'
-    echo '}'
+    echo "$jsonOutput"
 fi
 
