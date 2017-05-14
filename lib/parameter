@@ -9,6 +9,7 @@ COMPRESS_JSON=false
 MARKDOWN_OUTPUT=true
 SHOW_SYSTEM_INFORMATIONS=false
 DOCKER_NAME=""
+PARSE_VHOSTS=true
 
 # read arguments
 # help:
@@ -49,6 +50,12 @@ while [[ $# > 0 ]]; do
             ;;
         -d=*|--docker-container=*)
             DOCKER_NAME=("${1#*=}")
+            ;;
+
+        # help:         --disable-vhost-parser    Disable the vhost parser.
+        # help:
+        --disable-vhost-parser)
+            PARSE_VHOSTS=false
             ;;
 
         #

@@ -64,75 +64,70 @@ if [[ $userId -ne 0 ]]; then
     exit 1
 fi
 
-if [ "$DOCKER_NAME" != "" ]; then
-    lines=$(docker exec -it $DOCKER_NAME apachectl -S | grep -E "(namevhost|alias)")
-    serverRoot=$(docker exec -it $DOCKER_NAME apachectl -S | grep ServerRoot | awk '{print $2}' | sed -e 's/"//g')
-else
-    # check that apachectl is installed
-    if ! applicationExists apachectl; then
-        echo 'It seems that the apache is not installed on this system. Do this before continue.'
-        exit
-    fi
-
-    lines=$(apachectl -S | grep -E "(namevhost|alias)")
-    serverRoot=$(apachectl -S | grep ServerRoot | awk '{print $2}' | sed -e 's/^"//' -e 's/"$//')
-fi
-
-# last port, last domain, last config
-  port=""
-domain=""
-config=""
-
 # save all hosts including the scheme within this container
 declare -A schemeHostsContainer
 
-# split lines from apachectl config output
-lineArray=()
-while read -r line; do
-    lineArray+=("$line")
-done <<< "$lines"
-
-# iterate through the returned virtual hosts configs from apachectl
-for line in "${lineArray[@]}"; do
-    alias=$(echo "$line" | grep "alias")
-
-    if [ "$alias" != "" ]; then
-        domain=$(echo "$line" | awk '{print $2}')
-    else
-          port=$(echo "$line" | awk '{print $2}')
-        domain=$(echo "$line" | awk '{print $4}')
-        config=$(echo "$line" | awk '{print $5}')
+if $PARSE_VHOSTS; then
+    if [ "$DOCKER_NAME" == "" ] && ! applicationExists apachectl; then
+        echo 'It seems that the apache is not installed on this system. Do this before continue.' && exit
     fi
 
-    path=$(shopt -s nocasematch && [[ "$config" =~ \(([./a-z0-9\-]+) ]] && echo "${BASH_REMATCH[1]}")
-    line=$(shopt -s nocasematch && [[ "$config" =~ :([0-9]+)\) ]] && echo "${BASH_REMATCH[1]}")
+    lines=$(executeLocallyOrOnDocker "apachectl -S | grep -E \"(namevhost|alias)\"" "$DOCKER_NAME")
+    serverRoot=$(executeLocallyOrOnDocker "apachectl -S | grep ServerRoot | awk '{print \$2}' | sed -e 's/\"//g'" "$DOCKER_NAME")
 
-    if [[ "$domain" =~ xn-- ]]; then
-        # check that idn is installed
-        if ! applicationExists idn; then
-            echo 'The package "idn" is not installed. Please install this package before continue:'
-            echo '$ sudo apt install idn'
-            exit
+    # last port, last domain, last config
+      port=""
+    domain=""
+    config=""
+
+    # split lines from apachectl config output
+    lineArray=()
+    while read -r line; do
+        lineArray+=("$line")
+    done <<< "$lines"
+
+    # iterate through the returned virtual hosts configs from apachectl
+    for line in "${lineArray[@]}"; do
+        alias=$(echo "$line" | grep "alias")
+
+        if [ "$alias" != "" ]; then
+            domain=$(echo "$line" | awk '{print $2}')
+        else
+              port=$(echo "$line" | awk '{print $2}')
+            domain=$(echo "$line" | awk '{print $4}')
+            config=$(echo "$line" | awk '{print $5}')
         fi
 
-        domain=$(echo "$domain" | idn --idna-to-unicode)
-    fi
+        path=$(shopt -s nocasematch && [[ "$config" =~ \(([./a-z0-9\-]+) ]] && echo "${BASH_REMATCH[1]}")
+        line=$(shopt -s nocasematch && [[ "$config" =~ :([0-9]+)\) ]] && echo "${BASH_REMATCH[1]}")
 
-    if [ $port -eq 443 ]; then
-        domain="https://$domain"
-    else
-        domain="http://$domain"
-    fi
+        if [[ "$domain" =~ xn-- ]]; then
+            # check that idn is installed
+            if ! applicationExists idn; then
+                echo 'The package "idn" is not installed. Please install this package before continue:'
+                echo '$ sudo apt install idn'
+                exit
+            fi
 
-    documentRoot=$(getDocumentRootFromVirtualHost "/etc/apache2/sites-enabled/http.conf" 5 "/etc/apache2" "$DOCKER_NAME")
-    currentDomainString="${schemeHostsContainer[$documentRoot]}"
+            domain=$(echo "$domain" | idn --idna-to-unicode)
+        fi
 
-    if [ "$currentDomainString" != "" ]; then
-        schemeHostsContainer[$documentRoot]="$currentDomainString"$'\n'"$domain"
-    else
-        schemeHostsContainer[$documentRoot]="$domain"
-    fi
-done
+        if [ $port -eq 443 ]; then
+            domain="https://$domain"
+        else
+            domain="http://$domain"
+        fi
+
+        documentRoot=$(getDocumentRootFromVirtualHost "/etc/apache2/sites-enabled/http.conf" 5 "/etc/apache2" "$DOCKER_NAME")
+        currentDomainString="${schemeHostsContainer[$documentRoot]}"
+
+        if [ "$currentDomainString" != "" ]; then
+            schemeHostsContainer[$documentRoot]="$currentDomainString"$'\n'"$domain"
+        else
+            schemeHostsContainer[$documentRoot]="$domain"
+        fi
+    done
+fi
 
 # output markdown
 if $MARKDOWN_OUTPUT; then
