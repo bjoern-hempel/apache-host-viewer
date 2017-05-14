@@ -16,7 +16,7 @@ executeLocallyOrOnDocker()
 
         local lastExitCode=$?
     else
-        $command
+        sh -c "$command"
 
         local lastExitCode=$?
     fi
