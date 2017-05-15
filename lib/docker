@@ -12,7 +12,7 @@ executeLocallyOrOnDocker()
     local dockerName="$2"
 
     if [ "$dockerName" != "" ]; then
-        docker exec -it ixno.reverse.proxy sh -c "$command"
+        docker exec -it "$dockerName" sh -c "$command"
 
         local lastExitCode=$?
     else

@@ -42,7 +42,7 @@ while [[ $# > 0 ]]; do
             SHOW_SYSTEM_INFORMATIONS=true
             ;;
 
-        # help:  -s,    --show-system-info        Shows system informations.
+        # help:  -d,    --docker-container        Checks a docker machine instead of the local machine.
         # help:
         -d|--docker-container)
             DOCKER_NAME="$2"
