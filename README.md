@@ -16,9 +16,9 @@ user$ git clone git@github.com:bjoern-hempel/apache-host-viewer.git .
 ### 1.1) Showing the help dialog
 
 ```
-user$ bin/apache-host-viewer --help
+user$ ~/apache-host-viewer/bin/apache-host-viewer --help
 
-Usage: bin/apache-host-viewer [options...]
+Usage: ~/apache-host-viewer/bin/apache-host-viewer [options...]
  -h,    --help                    Shows this help.
 
  -j,    --json                    Shows the output as json and disable the markdown output
@@ -37,7 +37,7 @@ Usage: bin/apache-host-viewer [options...]
 The script uses the DUMP_VHOSTS function from `apachectl` (`apachectl -S`). This requires sudo credentials:
 
 ```
-user$ sudo bin/apache-host-viewer
+user$ sudo ~/apache-host-viewer/bin/apache-host-viewer
 ```
 
 The markdown result could be:
@@ -93,6 +93,14 @@ The markdown result could be:
 TODO..
 
 ### 1.4) JSON output
+
+TODO..
+
+### 1.5) Show additional system informations
+
+TODO..
+
+### 1.6) Check docker container instead of local system
 
 TODO..
 
