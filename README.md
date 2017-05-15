@@ -13,7 +13,26 @@ user$ git clone git@github.com:bjoern-hempel/apache-host-viewer.git .
 
 ## 1.) Usage
 
-### 1.1) Simply markdown
+### 1.1) Showing the help dialog
+
+```
+user$ bin/apache-host-viewer --help
+
+Usage: bin/apache-host-viewer [options...]
+ -h,    --help                    Shows this help.
+
+ -j,    --json                    Shows the output as json and disable the markdown output
+
+        --compress-json           Compress the outputted json.
+
+ -s,    --show-system-info        Shows system informations.
+
+ -d,    --docker-container        Checks a docker machine instead of the local machine.
+
+        --disable-vhost-parser    Disable the vhost parser.
+```
+
+### 1.2) Simply get the output as markdown markup language
 
 The script uses the DUMP_VHOSTS function from `apachectl` (`apachectl -S`). This requires sudo credentials:
 
@@ -69,11 +88,11 @@ The markdown result could be:
   - https://www.500landinitiativen.de
 ```
 
-### 1.2) HTML output
+### 1.3) HTML output
 
 TODO..
 
-### 1.3) JSON output
+### 1.4) JSON output
 
 TODO..
 
