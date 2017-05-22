@@ -322,16 +322,21 @@ getJsonOfSystemAndDocumentRoots()
     local counter=0
     for documentRoot in "${!schemeHostsContainer[@]}"; do
         [ $counter -gt 0 ] && echo ","
-        echo "                                         \"$documentRoot\": ["
+        echo    "                                         \"$documentRoot\": {"
+        echo    "                                             \"domains\": ["
         readarray -t schemeHosts <<< "${schemeHostsContainer[$documentRoot]}"
         local counter2=0
         for schemeHost in "${schemeHosts[@]}"; do
             [ $counter2 -gt 0 ] && echo ","
-            echo -n "                                             \"$schemeHost\""
+            echo -n "                                                 \"$schemeHost\""
             ((counter2++))
         done
         echo
-        echo -n "                                         ]"
+        echo    "                                             ],"
+        echo    "                                             \"ssl\": true,"
+        echo    "                                             \"app\": \"\","
+        echo    "                                             \"version\": \"\""
+        echo -n "                                         }"
         ((counter++))
     done
     echo

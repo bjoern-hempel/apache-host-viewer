@@ -119,6 +119,11 @@ if $PARSE_VHOSTS; then
         fi
 
         documentRoot=$(getDocumentRootFromVirtualHost "$path" $line "/etc/apache2" "$DOCKER_NAME")
+
+        if [ "$documentRoot" == "" ]; then
+            continue
+        fi
+
         currentDomainString="${schemeHostsContainer[$documentRoot]}"
 
         if [ "$currentDomainString" != "" ]; then
