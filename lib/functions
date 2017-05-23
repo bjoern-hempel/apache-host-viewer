@@ -107,13 +107,13 @@ getVirtualHost()
 }
 
 # ------------
-# Tries to extracts the document root from given virtual config block
-# in given $file on line $lineFrom. 
+# Tries to extracts the target (document root, proxy target, redirect, etc)
+# from given virtual config block in given $file on line $lineFrom.
 #
 # @author  Björn Hempel <bjoern@hempel.li>
-# @version 1.0 (2017-05-12)
+# @version 1.0 (2017-05-23)
 # ------------
-getDocumentRootFromVirtualHost()
+getTargetFromVirtualHost()
 {
     shopt -s nocasematch
 
@@ -124,12 +124,13 @@ getDocumentRootFromVirtualHost()
 
     local virtualHost=$(getVirtualHost "$file" $lineFrom "$serverRoot" "$dockerName")
 
-    local documentRoot=$(echo "$virtualHost" | grep "DocumentRoot")
-    local proxyPass=$(echo "$virtualHost" | grep "ProxyPass[ $'\t']")
+    local documentRoot=$(echo "$virtualHost" | grep -i "DocumentRoot" | head -n 1)
+    local proxyPass=$(echo "$virtualHost" | grep -i "ProxyPass[ $'\t']" | head -n 1)
+    local rewriteRule=$(echo "$virtualHost" | grep -i "RewriteRule" | grep 301 | head -n 1)
 
     if [ "$documentRoot" != "" ]; then
         if [[ "$documentRoot" =~ ([\t ]*DocumentRoot[\t ]+)([a-z0-9/.-]+) ]]; then
-            echo "${BASH_REMATCH[2]}"
+            echo "file://${BASH_REMATCH[2]}"
             return 0
         else
             return 1
@@ -144,6 +145,19 @@ getDocumentRootFromVirtualHost()
             return 1
         fi
     fi
+
+    if [ "$rewriteRule" != "" ]; then
+        local uri=$(echo "$rewriteRule" | awk '{print $3}')
+
+        if [ "$uri" != "" ]; then
+            echo "$uri"
+            return 0
+        else
+            return 1
+        fi
+    fi
+
+    return 1
 }
 
 # ------------
@@ -180,6 +194,17 @@ getHdSizeGb()
 }
 
 # ------------
+# Gets the percent of used disc size
+#
+# @author  Björn Hempel <bjoern@hempel.li>
+# @version 1.0 (2017-05-14)
+# ------------
+getHdUsedPercent()
+{
+    df -h | grep '^/dev/' | grep -v 'boot' | awk '{print $5*1}'
+}
+
+# ------------
 # Gets all users.
 #
 # @author  Björn Hempel <bjoern@hempel.li>
@@ -188,6 +213,39 @@ getHdSizeGb()
 getUsers()
 {
     cat /etc/passwd | grep ':[0-9]\+:100:' | awk -F: '{ st = index($0,":"); print $1}'
+}
+
+# ------------
+# Gets the full name of given user.
+#
+# @author  Björn Hempel <bjoern@hempel.li>
+# @version 1.0 (2017-05-23)
+# ------------
+getFullnameFromUser()
+{
+    getent passwd "$1" | cut -d ':' -f 5 | cut -d ',' -f 1
+}
+
+# ------------
+# Gets the php version
+#
+# @author  Björn Hempel <bjoern@hempel.li>
+# @version 1.0 (2017-05-23)
+# ------------
+getPhpVersion()
+{
+    php -v | grep -E "PHP [0-9]" | awk '{print $2}'
+}
+
+# ------------
+# Gets the mysql version
+#
+# @author  Björn Hempel <bjoern@hempel.li>
+# @version 1.0 (2017-05-23)
+# ------------
+getMysqlVersion()
+{
+    mysql --version | awk '{print $5}' | sed -E 's/,$//'
 }
 
 # ------------
@@ -259,32 +317,57 @@ getMarkdownOfSystemAndDocumentRoots()
         echo
         echo '| Name | Value |'
         echo '| ---- | ----- |'
-        echo '| os-name-full | '$(getOSName)' |'
-        echo '| number-of-cpus | '$(getNumberOfCpus)' |'
-        echo '| ram-size-gb | '$(getRamSizeGb)' |'
-        echo '| hd-size-gb | '$(getHdSizeGb)' |'
-        echo '| updateable-application-number | '$(getNumberOfInstallableApplications)' |'
+        echo '| document created at | '$(date "+%Y-%m-%d %H:%M:%S")' |'
+        echo '| full os name | '$(getOSName)' |'
+        echo '| number of cpus | '$(getNumberOfCpus)' |'
+        echo '| ram size in gb | '$(getRamSizeGb)' |'
+        echo '| hd disc size in gb | '$(getHdSizeGb)' |'
+        echo '| used hd disc size | '$(getHdUsedPercent)' % |'
+        echo '| number of updateable applications | '$(getNumberOfInstallableApplications)' |'
+        echo '| php version | '$(getPhpVersion)' |'
+        echo '| mysql version | '$(getMysqlVersion)' |'
+
+        echo
+        echo '### Users'
+        echo
+
+        echo '| Username | Fullname |'
+        echo '| ---- | ----- |'
 
         local users=$(getUsers)
-        local counter=1
         while read -r user; do
-            echo "| user $counter | $user |"
-            ((counter++))
+            local fullname=$(getFullnameFromUser "$user")
+            echo "| $user | $fullname |"
         done <<< "$users"
 
         echo 
     fi
 
-    echo '### Document Roots'
+    echo '### Projects'
     echo
-    for documentRoot in "${!schemeHostsContainer[@]}"; do
-        echo "- $documentRoot"
+    for target in "${!schemeHostsContainer[@]}"; do
+        eval "declare -A project="$(analyzeProject "$target")
 
-        readarray -t schemeHosts <<< "${schemeHostsContainer[$documentRoot]}"
+        echo "- $target"
 
-        for schemeHost in "${schemeHosts[@]}"; do
-            echo "  - $schemeHost"
-        done
+        readarray -t schemeHosts <<< "${schemeHostsContainer[$target]}"
+
+        local ssl=false
+
+        if [ ${#schemeHosts[@]} -le 1 ]; then
+            echo "  - target: ${schemeHosts[0]}"
+            [[ "${schemeHosts[0]}" =~ ^https ]] && ssl=true
+        else
+            echo "  - targets:"
+            for schemeHost in "${schemeHosts[@]}"; do
+                echo "    - $schemeHost"
+                [[ "$schemeHost" =~ ^https ]] && ssl=true
+            done
+        fi
+
+        echo "  - ssl: "$($ssl && echo 'true' || echo 'false')
+        echo "  - app: ${project[app]}"
+        echo "  - version: ${project[version]}"
     done
     echo
 }
@@ -300,42 +383,54 @@ getJsonOfSystemAndDocumentRoots()
     echo '{'
 
     if $SHOW_SYSTEM_INFORMATIONS; then
+        echo '    "created-at":                    "'$(date "+%Y-%m-%d %H:%M:%S")'",'
         echo '    "os-name-full":                  "'$(getOSName)'",'
         echo '    "number-of-cpus":                "'$(getNumberOfCpus)'",'
         echo '    "ram-size-gb":                   "'$(getRamSizeGb)'",'
         echo '    "hd-size-gb":                    "'$(getHdSizeGb)'",'
+        echo '    "hd-size-used-percent":          "'$(getHdUsedPercent)'",'
         echo '    "updateable-application-number": "'$(getNumberOfInstallableApplications)'",'
+        echo '    "php-version":                   "'$(getPhpVersion)'",'
+        echo '    "mysql-version":                 "'$(getMysqlVersion)'",'
 
         local users=$(getUsers)
-        echo '    "users":                         ['
+        echo '    "users":                         {'
         local counter=0
         while read -r user; do
+            local fullname=$(getFullnameFromUser "$user")
             [ $counter -gt 0 ] && echo ","
-            echo -n "                                         \"$user\""
+            echo -n "                                         \"$user\": \"$fullname\""
             ((counter++))
         done <<< "$users"
         echo
-        echo '                                     ],'
+        echo '                                     },'
     fi
 
-    echo '    "document-roots":                {'
+    echo '    "projects":                      {'
     local counter=0
-    for documentRoot in "${!schemeHostsContainer[@]}"; do
+    for target in "${!schemeHostsContainer[@]}"; do
+        eval "declare -A project="$(analyzeProject "$target")
+
         [ $counter -gt 0 ] && echo ","
-        echo    "                                         \"$documentRoot\": {"
+        echo    "                                         \"$target\": {"
         echo    "                                             \"domains\": ["
-        readarray -t schemeHosts <<< "${schemeHostsContainer[$documentRoot]}"
+
+        readarray -t schemeHosts <<< "${schemeHostsContainer[$target]}"
+        local ssl=false
+
         local counter2=0
         for schemeHost in "${schemeHosts[@]}"; do
             [ $counter2 -gt 0 ] && echo ","
             echo -n "                                                 \"$schemeHost\""
             ((counter2++))
+
+            [[ "$schemeHost" =~ ^https ]] && ssl=true
         done
         echo
         echo    "                                             ],"
-        echo    "                                             \"ssl\": true,"
-        echo    "                                             \"app\": \"\","
-        echo    "                                             \"version\": \"\""
+        echo    "                                             \"ssl\": "$($ssl && echo 'true' || echo 'false')","
+        echo    "                                             \"app\": \"${project[app]}\","
+        echo    "                                             \"version\": \"${project[version]}\""
         echo -n "                                         }"
         ((counter++))
     done
@@ -356,4 +451,143 @@ compressJson()
 
     echo -n "$json" | sed 's/^[ \t]*//' | sed ':a;N;$!ba;s/\n//g' | sed 's/:[ ]\+"/:"/g' | sed 's/:[ ]\+\[/:\[/g' | sed 's/:[ ]\+{/:{/g'
 }
+
+# ------------
+# Analyzes the given project path and tries to find out the app and version number.
+#
+# @author  Björn Hempel
+# @version 1.0 (2017-05-23)
+# ------------
+analyzeProject()
+{
+    local uri="$1"
+
+    local scheme=""
+    local   path="$uri"
+
+    local     app='unknown'
+    local version='unknown'
+
+    # the return array
+    declare -A ret=()
+
+    # check the uri
+    if [[ "$uri" =~ ^([a-z]+)://(.+) ]]; then
+        scheme="${BASH_REMATCH[1]}"
+        path="${BASH_REMATCH[2]}"
+    fi
+
+    # redirection or proxy-pass
+    if [[ "$scheme" =~ ^http ]]; then
+            ret[app]='redirection'
+        ret[version]='not available'
+
+        local retDeclare=$(declare -p ret)
+
+        echo "${retDeclare#*=}"
+        return 0
+    fi
+
+    # path does not exist
+    if [ ! -d "$path" ]; then
+        # return array¬
+        declare -A ret=()
+            ret[app]='not available'
+        ret[version]='not available'
+
+        local retDeclare=$(declare -p ret)
+
+        echo "${retDeclare#*=}"
+        return 1
+    fi
+
+    # some vars
+    local projectPath="$path"
+    local  startPath=$(pwd)
+    cd "$projectPath"
+
+    # contao
+    if [ "$app" == "unknown" ] && [ -d "contao" ] && [ -f "system/config/constants.php" ]; then
+        app='Contao'
+        version=$(php -r 'include_once "system/config/constants.php"; echo VERSION;')
+    fi
+
+    # symfony
+    if [ "$app" == "unknown" ] && [ -f "app.php" ] && [ -d "../app" ]; then
+        cd ..
+    fi
+    if [ "$app" == "unknown" ] && [ -d "app" ] && [ -f "app/console" ]; then
+        app='Symfony'
+        version=$(app/console --version | awk '{print $3}' | sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]//g")
+    fi
+
+    # TYPO3
+    if [ "$app" == "unknown" ] && [ -d "typo3_src" ]; then
+        app='TYPO3'
+        version="unknown"
+
+        pathSystemEnvironmentBuilder='typo3_src/typo3/sysext/core/Classes/Core/SystemEnvironmentBuilder.php'
+        if [ -f "$pathSystemEnvironmentBuilder" ]; then
+            version=$([[ $(grep --no-filename -r "define('TYPO3_version'" "$pathSystemEnvironmentBuilder") =~ TYPO3_version\',[[:space:]]*\'([^\']*) ]] && echo ${BASH_REMATCH[1]})
+        fi
+    fi
+
+    # Wordpress
+    if [ "$app" == "unknown" ] && [ -d "wordpress" ]; then
+        cd "wordpress"
+    fi
+    if [ "$app" == "unknown" ] && [ -d "wp-admin" ]; then
+        app='Wordpress'
+        version='unknown'
+
+        versionFile='wp-includes/version.php'
+        if [ -f "$versionFile" ]; then
+            version=$([[ $(grep --no-filename -r "\$wp_version =" "$versionFile") =~ wp_version[[:space:]]*=[[:space:]]*\'([^\']*) ]] && echo ${BASH_REMATCH[1]})
+        fi
+    fi
+
+    # Dresden Frontend Tool
+    if [ "$app" == "unknown" ] && [ -d "dd-fe-tool" ]; then
+        app='DD Frontend Tool (Silex)'
+
+        cd "dd-fe-tool"
+
+        versionFile='vendor/silex/silex/src/Silex/Application.php'
+        if [ -f "$versionFile" ]; then
+            version=$([[ $(grep --no-filename -r "VERSION =" "$versionFile") =~ VERSION[[:space:]]*=[[:space:]]*\'([^\']*) ]] && echo ${BASH_REMATCH[1]})
+        fi
+    fi
+
+    # index.php
+    if [ "$app" == "unknown" ] && [ -f "index.php" ]; then
+        app='PHP project'
+        version='PHP '$(php -v | grep -E "PHP [0-9]" | awk '{print $2}')
+    fi
+
+    # index.html
+    if [ "$app" == "unknown" ] && [ -d "html" ]; then
+        cd "html"
+    fi
+    if [ "$app" == "unknown" ] && [ -f "index.html" ]; then
+        app='HTML project'
+        version='unknown'
+    fi
+
+    # return array
+    declare -A ret=()
+        ret[app]="$app"
+    ret[version]="$version"
+
+    # return the array
+    local retDeclare=$(declare -p ret)
+    echo "${retDeclare#*=}"
+
+    # save start path
+    cd "$startPath"
+
+    return 0
+}
+
+
+
 

@@ -34,6 +34,9 @@
 # makes the regexp search case insensitive
 shopt -s nocasematch
 
+# config: max result
+maxResult=0
+
 # include the libraries
 if [ -h "${BASH_SOURCE[0]}" ]; then
     filename=$(readlink "${BASH_SOURCE[0]}")
@@ -87,12 +90,19 @@ if $PARSE_VHOSTS; then
     done <<< "$lines"
 
     # iterate through the returned virtual hosts configs from apachectl
+    loopCounter=0
     for line in "${lineArray[@]}"; do
         alias=$(echo "$line" | grep "alias")
 
         if [ "$alias" != "" ]; then
             domain=$(echo "$line" | awk '{print $2}')
         else
+            ((loopCounter++))
+
+            if [ $maxResult -gt 0 ] && [ $loopCounter -gt $maxResult ]; then
+                break
+            fi
+
               port=$(echo "$line" | awk '{print $2}')
             domain=$(echo "$line" | awk '{print $4}')
             config=$(echo "$line" | awk '{print $5}')
@@ -118,18 +128,19 @@ if $PARSE_VHOSTS; then
             domain="http://$domain"
         fi
 
-        documentRoot=$(getDocumentRootFromVirtualHost "$path" $line "/etc/apache2" "$DOCKER_NAME")
+        targetUri=$(getTargetFromVirtualHost "$path" $line "/etc/apache2" "$DOCKER_NAME")
+        lastStatus=$?
 
-        if [ "$documentRoot" == "" ]; then
+        if [ $lastStatus -gt 0 ]; then
             continue
         fi
 
-        currentDomainString="${schemeHostsContainer[$documentRoot]}"
+        currentDomainString="${schemeHostsContainer[$targetUri]}"
 
         if [ "$currentDomainString" != "" ]; then
-            schemeHostsContainer[$documentRoot]="$currentDomainString"$'\n'"$domain"
+            schemeHostsContainer[$targetUri]="$currentDomainString"$'\n'"$domain"
         else
-            schemeHostsContainer[$documentRoot]="$domain"
+            schemeHostsContainer[$targetUri]="$domain"
         fi
     done
 fi
