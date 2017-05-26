@@ -89,7 +89,7 @@ getVirtualHost()
     fi
 
     # replace all "include paths"
-    while [[ "$content" =~ (^|$'\n')([[:space:]]*)(include[[:space:]]+)([a-z0-9/.-]+) ]]; do
+    while [[ "$content" =~ (^|$'\n')([[:space:]]*)(include[[:space:]]+)([a-z0-9_/.-]+) ]]; do
         local fullstring="${BASH_REMATCH[3]}${BASH_REMATCH[4]}"
         local includePath="$serverRoot/${BASH_REMATCH[4]}"
 
