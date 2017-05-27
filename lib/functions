@@ -522,11 +522,15 @@ analyzeProject()
     fi
 
     # TYPO3
-    if [ "$app" == "unknown" ] && [ -d "typo3_src" ]; then
+    if [ "$app" == "unknown" ] && ([ -d "typo3_src/typo3" ] || [ -d "typo3" ]); then
         app='TYPO3'
         version="unknown"
 
-        pathSystemEnvironmentBuilder='typo3_src/typo3/sysext/core/Classes/Core/SystemEnvironmentBuilder.php'
+        local typo3src=""
+        [ -d "typo3_src/typo3" ] && typo3src="typo3_src/typo3"
+        [ -d "typo3"           ] && typo3src="typo3"
+
+        pathSystemEnvironmentBuilder="$typo3src/sysext/core/Classes/Core/SystemEnvironmentBuilder.php"
         if [ -f "$pathSystemEnvironmentBuilder" ]; then
             version=$([[ $(grep --no-filename -r "define('TYPO3_version'" "$pathSystemEnvironmentBuilder") =~ TYPO3_version\',[[:space:]]*\'([^\']*) ]] && echo ${BASH_REMATCH[1]})
         fi
