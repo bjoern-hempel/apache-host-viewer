@@ -249,7 +249,7 @@ The markdown result could be:
 }
 ```
 
-### 1.5) Show additional system informations (`--show-system-info`)
+### 1.5) Add some additional system informations (`--show-system-info`)
 
 The script uses the DUMP_VHOSTS function from `apachectl` (`apachectl -S`). This requires sudo credentials:
 
@@ -323,7 +323,33 @@ The markdown result could be:
   - version: 8.7.1
 ```
 
-### 1.6) Check docker container instead of local system
+You can use this parameter in combination with all other parameters (--markdown, --json, --html, --create-markdown, --create-json, --create-html).
+
+### 1.6) Create md file into a given folder
+
+By default a markdown file (index.md) will be created. The following command also prints the mardkown result on the screen:
+
+```
+user$ sudo ~/apache-host-viewer/bin/apache-host-viewer --output-target=/var/www/html/server --output-name=index
+```
+
+### 1.7) What's with json and html files? (`--create-json` and `--create-html`)
+
+Here it comes:
+
+```
+user$ sudo ~/apache-host-viewer/bin/apache-host-viewer --output-target=/var/www/html/server --output-name=index --create-json --create-html
+```
+
+### 1.8) Suppress the default output (`--silence`)
+
+This following command creates a md, a json and a html file into the folder `/var/www/html/server` and don't output any message to the command line:
+
+```
+user$ sudo ~/apache-host-viewer/bin/apache-host-viewer --output-target=/var/www/html/server --output-name=index --show-system-info --create-json --create-html --silence
+```
+
+### 1.9) Check docker container instead of local system
 
 TODO..
 
