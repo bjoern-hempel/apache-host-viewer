@@ -95,7 +95,97 @@ The markdown result could be:
 
 ### 1.3) HTML output
 
-TODO..
+The script uses the DUMP_VHOSTS function from `apachectl` (`apachectl -S`). This requires sudo credentials:
+
+```
+user$ sudo ~/apache-host-viewer/bin/apache-host-viewer --html
+```
+
+The markdown result could be:
+
+```
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <!--[if IE]>                                                                                                                                                   
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <![endif]-->
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta charset="UTF-8" />
+        <title>wmbw.rsm-live.de</title>
+        <link rel="stylesheet" href="markdown.css">
+        <style>
+            .markdown-body {
+                box-sizing: border-box;
+                min-width: 200px;
+                max-width: 980px;
+                margin: 0 auto;
+                padding: 45px;
+            }
+        </style>
+    </head>
+    <body>
+        <article class="markdown-body">
+<h3 id="projects">Projects</h3>
+<ul>
+<li>file:///var/www/de/rsm-live/wmbw/start-up-bw/www/html/current/web<ul>
+<li>targets:<ul>
+<li><a href="http://www.start-up-bw.wmbw.rsm-live.de">http://www.start-up-bw.wmbw.rsm-live.de</a></li>
+<li><a href="http://start-up-bw.wmbw.rsm-live.de">http://start-up-bw.wmbw.rsm-live.de</a></li>
+<li><a href="https://www.start-up-bw.wmbw.rsm-live.de">https://www.start-up-bw.wmbw.rsm-live.de</a></li>
+<li><a href="https://start-up-bw.wmbw.rsm-live.de">https://start-up-bw.wmbw.rsm-live.de</a></li>
+</ul>
+</li>
+<li>ssl: true</li>
+<li>app: HTML project</li>
+<li>version: unknown</li>
+</ul>
+</li>
+<li>file:///var/www/html<ul>
+<li>targets:<ul>
+<li><a href="http://wmbw.rsm-live.de">http://wmbw.rsm-live.de</a></li>
+<li><a href="http://www.wmbw.rsm-live.de">http://www.wmbw.rsm-live.de</a></li>
+<li><a href="http://wmbw.rsm-live.de">http://wmbw.rsm-live.de</a></li>
+<li><a href="https://www.wmbw.rsm-live.de">https://www.wmbw.rsm-live.de</a></li>
+<li><a href="https://wmbw.rsm-live.de">https://wmbw.rsm-live.de</a></li>
+</ul>
+</li>
+<li>ssl: true</li>
+<li>app: HTML project</li>
+<li>version: unknown</li>
+</ul>
+</li>
+<li><a href="https://www.startupgipfel.de/registration/">https://www.startupgipfel.de/registration/</a><ul>
+<li>targets:<ul>
+<li><a href="http://www.start-up-bw.de">http://www.start-up-bw.de</a></li>
+<li><a href="http://start-up-bw.de">http://start-up-bw.de</a></li>
+<li><a href="http://www.startupbw.de">http://www.startupbw.de</a></li>
+<li><a href="http://startupbw.de">http://startupbw.de</a></li>
+</ul>
+</li>
+<li>ssl: false</li>
+<li>app: redirection</li>
+<li>version: not available</li>
+</ul>
+</li>
+<li>file:///var/www/de/rsm-stage/wmbw/start-up-bw/www/html/current/web<ul>
+<li>targets:<ul>
+<li><a href="http://www.start-up-bw.wmbw.rsm-stage.de">http://www.start-up-bw.wmbw.rsm-stage.de</a></li>
+<li><a href="http://start-up-bw.wmbw.rsm-stage.de">http://start-up-bw.wmbw.rsm-stage.de</a></li>
+<li><a href="https://www.start-up-bw.wmbw.rsm-stage.de">https://www.start-up-bw.wmbw.rsm-stage.de</a></li>
+<li><a href="https://start-up-bw.wmbw.rsm-stage.de">https://start-up-bw.wmbw.rsm-stage.de</a></li>
+</ul>
+</li>
+<li>ssl: true</li>
+<li>app: TYPO3</li>
+<li>version: 8.7.1</li>
+</ul>
+</li>
+</ul>
+</article>
+    </body>
+</html>
+```
 
 ### 1.4) JSON output
 
