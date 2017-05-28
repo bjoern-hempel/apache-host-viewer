@@ -151,20 +151,18 @@ if [ "$OUTPUT_TARGET" != "" ]; then
     jsonFile="$OUTPUT_TARGET/$OUTPUT_NAME.$JSON_SUFFIX"
     htmlFile="$OUTPUT_TARGET/$OUTPUT_NAME.$HTML_SUFFIX"
 
-    if $CREATE_MARKDOWN; then
-        markdownOutput=$(getMarkdownOfSystemAndDocumentRoots)
-        echo "$markdownOutput" > $markdownFile
-    fi
-
+    # create md and/or html file
     if $CREATE_MARKDOWN || $CREATE_HTML; then
         markdownOutput=$(getMarkdownOfSystemAndDocumentRoots)
 
         echo "$markdownOutput" > "$markdownFile.~tmp"
 
+        # create html from md file
         if $CREATE_HTML; then
             md2html "$markdownFile.~tmp" "$htmlFile"
         fi
 
+        # create md file
         if $CREATE_MARKDOWN; then
             mv "$markdownFile.~tmp" "$markdownFile"
         else

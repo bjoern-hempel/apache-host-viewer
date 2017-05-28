@@ -464,10 +464,21 @@ md2html()
     local    indexFile="$2"
     local   targetPath=$(dirname "$indexFile")
 
-    local     cssFile="https://raw.githubusercontent.com/sindresorhus/github-markdown-css/gh-pages/github-markdown.css"
-    local     cssName="markdown.css"
-    local cssFullpath="$targetPath/$cssName"
-    local  servername=$(hostname)
+    local          cssFile="https://raw.githubusercontent.com/sindresorhus/github-markdown-css/gh-pages/github-markdown.css"
+    local          cssName="markdown.css"
+    local      cssFullpath="$targetPath/$cssName"
+    local       servername=$(hostname)
+    local markdown2HtmlApp="markdown"
+
+    # check if markdown app exists
+    if ! applicationExists "$markdown2HtmlApp"; then
+        >&2 echo "Application $markdown2HtmlApp does not exist on this system. Please install with:"
+        >&2 echo
+        >&2 echo "user$ curl -sL https://deb.nodesource.com/setup_7.x | sudo -E bash -"
+        >&2 echo "user$ sudo apt install nodejs"
+        >&2 echo "user$ sudo npm install markdown-to-html -g"
+        return 2
+    fi
 
     # download css file
     wget -O "$cssFullpath" --quiet "$cssFile"
@@ -663,6 +674,13 @@ analyzeProject()
     return 0
 }
 
-
-
+# ------------
+# check if a given application exists
+#
+# @author  Björn Hempel
+# @version 1.0
+# ------------
+applicationExists() {
+  `which $1 >/dev/null`
+}
 
