@@ -93,7 +93,7 @@ The markdown result could be:
   - version: 8.7.1
 ```
 
-### 1.3) HTML output
+### 1.3) HTML output (--html)
 
 The script uses the DUMP_VHOSTS function from `apachectl` (`apachectl -S`). This requires sudo credentials:
 
@@ -187,9 +187,67 @@ The markdown result could be:
 </html>
 ```
 
-### 1.4) JSON output
+### 1.4) JSON output (--json)
 
-TODO..
+The script uses the DUMP_VHOSTS function from `apachectl` (`apachectl -S`). This requires sudo credentials:
+
+```
+user$ sudo ~/apache-host-viewer/bin/apache-host-viewer --json
+```
+
+The markdown result could be:
+
+```
+{
+    "projects": {
+        "file:///var/www/de/rsm-live/wmbw/start-up-bw/www/html/current/web": {
+            "domains": [
+                "http://www.start-up-bw.wmbw.rsm-live.de",
+                "http://start-up-bw.wmbw.rsm-live.de",
+                "https://www.start-up-bw.wmbw.rsm-live.de",
+                "https://start-up-bw.wmbw.rsm-live.de"
+            ],
+            "ssl": true,
+            "app": "HTML project",
+            "version": "unknown"
+        },
+        "file:///var/www/html": {
+            "domains": [
+                "http://wmbw.rsm-live.de",
+                "http://www.wmbw.rsm-live.de",
+                "http://wmbw.rsm-live.de",
+                "https://www.wmbw.rsm-live.de",
+                "https://wmbw.rsm-live.de"
+            ],
+            "ssl": true,
+            "app": "HTML project",
+            "version": "unknown"
+        },
+        "https://www.startupgipfel.de/registration/": {
+            "domains": [
+                "http://www.start-up-bw.de",
+                "http://start-up-bw.de",
+                "http://www.startupbw.de",
+                "http://startupbw.de"
+            ],
+            "ssl": false,
+            "app": "redirection",
+            "version": "not available"
+        },
+        "file:///var/www/de/rsm-stage/wmbw/start-up-bw/www/html/current/web": {
+            "domains": [
+                "http://www.start-up-bw.wmbw.rsm-stage.de",
+                "http://start-up-bw.wmbw.rsm-stage.de",
+                "https://www.start-up-bw.wmbw.rsm-stage.de",
+                "https://start-up-bw.wmbw.rsm-stage.de"
+            ],
+            "ssl": true,
+            "app": "TYPO3",
+            "version": "8.7.1"
+        }
+    }
+}
+```
 
 ### 1.5) Show additional system informations (--show-system-info)
 
