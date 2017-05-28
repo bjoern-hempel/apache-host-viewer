@@ -99,9 +99,78 @@ TODO..
 
 TODO..
 
-### 1.5) Show additional system informations
+### 1.5) Show additional system informations (--show-system-info)
 
-TODO..
+The script uses the DUMP_VHOSTS function from `apachectl` (`apachectl -S`). This requires sudo credentials:
+
+```
+user$ sudo ~/apache-host-viewer/bin/apache-host-viewer --show-system-info
+```
+
+The markdown result could be:
+
+```
+### System informations
+
+| Name | Value |
+| ---- | ----- |
+| document created at | 2017-05-28 16:38:38 |
+| full os name | Linux Debian 8.8 (3.16.0-4-amd64 x86_64) |
+| number of cpus | 4 |
+| ram size in gb | 15.6774 |
+| hd disc size in gb | 219 |
+| used hd disc size | 2 % |
+| number of updateable applications | 0 |
+| php version | 7.0.19-1~dotdeb+8.1 |
+| mysql version | 5.5.55 |
+
+### Users
+
+| Username | Fullname |
+| ---- | ----- |
+| bjoern | Björn Hempel |
+| michael.huebe | Michael Hübe |
+
+### Projects
+
+- file:///var/www/de/rsm-live/wmbw/start-up-bw/www/html/current/web
+  - targets:
+    - http://www.start-up-bw.wmbw.rsm-live.de
+    - http://start-up-bw.wmbw.rsm-live.de
+    - https://www.start-up-bw.wmbw.rsm-live.de
+    - https://start-up-bw.wmbw.rsm-live.de
+  - ssl: true
+  - app: HTML project
+  - version: unknown
+- file:///var/www/html
+  - targets:
+    - http://wmbw.rsm-live.de
+    - http://www.wmbw.rsm-live.de
+    - http://wmbw.rsm-live.de
+    - https://www.wmbw.rsm-live.de
+    - https://wmbw.rsm-live.de
+  - ssl: true
+  - app: HTML project
+  - version: unknown
+- https://www.startupgipfel.de/registration/
+  - targets:
+    - http://www.start-up-bw.de
+    - http://start-up-bw.de
+    - http://www.startupbw.de
+    - http://startupbw.de
+  - ssl: false
+  - app: redirection
+  - version: not available
+- file:///var/www/de/rsm-stage/wmbw/start-up-bw/www/html/current/web
+  - targets:
+    - http://www.start-up-bw.wmbw.rsm-stage.de
+    - http://start-up-bw.wmbw.rsm-stage.de
+    - https://www.start-up-bw.wmbw.rsm-stage.de
+    - https://start-up-bw.wmbw.rsm-stage.de
+  - ssl: true
+  - app: TYPO3
+  - version: 8.7.1
+```
 
 ### 1.6) Check docker container instead of local system
 
