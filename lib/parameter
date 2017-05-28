@@ -10,6 +10,15 @@ MARKDOWN_OUTPUT=true
 SHOW_SYSTEM_INFORMATIONS=false
 DOCKER_NAME=""
 PARSE_VHOSTS=true
+OUTPUT_TARGET=""
+OUTPUT_NAME="index"
+CREATE_JSON=false
+CREATE_MARKDOWN=true
+CREATE_HTML=false
+MARKDOWN_SUFFIX="md"
+JSON_SUFFIX="json"
+HTML_SUFFIX="html"
+SILENCE=false
 
 # read arguments
 # help:
@@ -17,33 +26,74 @@ PARSE_VHOSTS=true
 while [[ $# > 0 ]]; do
     case "$1" in
         # help:  -h,    --help                    Shows this help.
-        # help:
         -h|--help)
             cat "$pathRoot/lib/parameter" | grep "# help:" | grep -v 'cat parameter' | sed 's/[ ]*# help:[ ]\?//g' | sed "s~%scriptname%~$scriptname~g"
             exit 0
             ;;
 
-        # help:  -j,    --json                    Shows the output as json and disable the markdown output
         # help:
+        # help:  -j,    --json                    Shows the output as json and disable the markdown output
         -j|--json)
             JSON_OUTPUT=true
             MARKDOWN_OUTPUT=false
             ;;
 
         # help:         --compress-json           Compress the outputted json.
-        # help:
         --compress-json)
             COMPRESS_JSON=true
             ;;
 
-        # help:  -s,    --show-system-info        Shows system informations.
         # help:
+        # help:         --output-target           Writes the result into this target folder.
+        --output-target)
+            OUTPUT_TARGET="$2"
+            shift
+            ;;
+        --output-target=*)
+            OUTPUT_TARGET="${1#*=}"
+            ;;
+
+        # help:         --output-name             Set the output name (default is "index").
+        --output-name)
+            OUTPUT_NAME="$2"
+            shift
+            ;;
+        --output-name=*)
+            OUTPUT_NAME="${1#*=}"
+            ;;
+
+        # help:         --create-markdown         Creates a markdown file (--output-target must be set).
+        --create-markdown)
+            CREATE_MARKDOWN=true
+            ;;
+        --create-markdown=*)
+            [ "${1#*=}" == "0" ] && CREATE_MARKDOWN=false || CREATE_MARKDOWN=true
+            ;;
+
+        # help:         --create-json             Creates a json file (--output-target must be set).
+        --create-json)
+            CREATE_JSON=true
+            ;;
+        --create-json=*)
+            [ "${1#*=}" == "0" ] && CREATE_JSON=false || CREATE_JSON=true
+            ;;
+
+        # help:         --create-html             Creates a html file (--output-target must be set).
+        --create-html)
+            CREATE_HTML=true
+            ;;
+        --create-html=*)
+            [ "${1#*=}" == "0" ] && CREATE_HTML=false || HTML_MARKDOWN=true
+            ;;
+
+        # help:
+        # help:  -s,    --show-system-info        Shows system informations.
         -s|--show-system-info)
             SHOW_SYSTEM_INFORMATIONS=true
             ;;
 
-        # help:  -d,    --docker-container        Checks a docker machine instead of the local machine.
         # help:
+        # help:  -d,    --docker-container        Checks a docker machine instead of the local machine.
         -d|--docker-container)
             DOCKER_NAME="$2"
             shift
@@ -52,12 +102,19 @@ while [[ $# > 0 ]]; do
             DOCKER_NAME=("${1#*=}")
             ;;
 
-        # help:         --disable-vhost-parser    Disable the vhost parser.
         # help:
+        # help:         --disable-vhost-parser    Disable the vhost parser.
         --disable-vhost-parser)
             PARSE_VHOSTS=false
             ;;
 
+        # help:
+        # help:         --silence                 Disable the output.
+        --silence)
+            SILENCE=true
+            ;;
+
+        # help:
         #
         # collect all unknown parameters
         #
@@ -67,3 +124,4 @@ while [[ $# > 0 ]]; do
     esac
     shift
 done
+

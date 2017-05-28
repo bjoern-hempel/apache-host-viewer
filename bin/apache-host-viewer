@@ -145,14 +145,48 @@ if $PARSE_VHOSTS; then
     done
 fi
 
-# output markdown
-if $MARKDOWN_OUTPUT; then
+# write markdown/json/html file
+if [ "$OUTPUT_TARGET" != "" ]; then
+    markdownFile="$OUTPUT_TARGET/$OUTPUT_NAME.$MARKDOWN_SUFFIX"
+    jsonFile="$OUTPUT_TARGET/$OUTPUT_NAME.$JSON_SUFFIX"
+    htmlFile="$OUTPUT_TARGET/$OUTPUT_NAME.$HTML_SUFFIX"
+
+    if $CREATE_MARKDOWN; then
+        markdownOutput=$(getMarkdownOfSystemAndDocumentRoots)
+        echo "$markdownOutput" > $markdownFile
+    fi
+
+    if $CREATE_MARKDOWN || $CREATE_HTML; then
+        markdownOutput=$(getMarkdownOfSystemAndDocumentRoots)
+
+        echo "$markdownOutput" > "$markdownFile.~tmp"
+
+        if $CREATE_HTML; then
+            md2html "$markdownFile.~tmp" "$htmlFile"
+        fi
+
+        if $CREATE_MARKDOWN; then
+            mv "$markdownFile.~tmp" "$markdownFile"
+        else
+            rm "$markdownFile.~tmp"
+        fi
+    fi
+
+    # create json file
+    if $CREATE_JSON; then
+        jsonOutput=$(getJsonOfSystemAndDocumentRoots)
+        echo "$jsonOutput" > $jsonFile
+    fi
+fi
+
+# markdown output
+if ! $SILENCE && $MARKDOWN_OUTPUT; then
     markdownOutput=$(getMarkdownOfSystemAndDocumentRoots)
     echo "$markdownOutput"
 fi
 
 # json output
-if $JSON_OUTPUT; then
+if ! $SILENCE && $JSON_OUTPUT; then
     jsonOutput=$(getJsonOfSystemAndDocumentRoots)
 
     if $COMPRESS_JSON; then
