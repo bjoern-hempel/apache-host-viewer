@@ -327,7 +327,7 @@ You can use this parameter in combination with all other parameters (--markdown,
 
 ### 1.6) Create md file into a given folder (`--output-target`)
 
-The following command will create a markdown file (index.md) into the folder `/var/ww/html/server`. The following command also prints the markdown result on the screen:
+The following command will create a markdown file (`index.md`) into the folder `/var/ww/html/server`. The following command also prints the markdown result on the screen:
 
 ```
 user$ sudo ~/apache-host-viewer/bin/apache-host-viewer --output-target=/var/www/html/server --output-name=index
@@ -335,7 +335,7 @@ user$ sudo ~/apache-host-viewer/bin/apache-host-viewer --output-target=/var/www/
 
 ### 1.7) What's with json and html files? (`--create-json` and `--create-html`)
 
-Here it comes:
+Here it comes. It will also create a `index.html` and a `index.json` file into the folder `/var/ww/html/server`:
 
 ```
 user$ sudo ~/apache-host-viewer/bin/apache-host-viewer --output-target=/var/www/html/server --output-name=index --create-json --create-html
