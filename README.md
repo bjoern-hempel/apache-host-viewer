@@ -50,49 +50,45 @@ user$ sudo ~/apache-host-viewer/bin/apache-host-viewer
 The markdown result could be:
 
 ```
-- /var/www/de/rsm-development/bmel/haustierportal/staging/html
-  - http://staging.haustierportal.bmel.rsm-development.de
-  - https://staging.haustierportal.bmel.rsm-development.de
-- /var/www/de/rsm-development/bmel/haustierportal/live/html
-  - http://live.haustierportal.bmel.rsm-development.de
-  - http://haustier-berater.de
-  - http://www.haustier-berater.de
-  - https://live.haustierportal.bmel.rsm-development.de
-  - https://haustier-berater.de
-  - https://www.haustier-berater.de
-- /var/www/de/rsm-development/bmel/500li/staging/html
-  - http://staging.500li.bmel.rsm-development.de
-  - https://staging.500li.bmel.rsm-development.de
-- /var/www/de/rsm-live/bienenfuettern/www/html
-  - http://www.bienenfuettern.rsm-live.de
-  - http://bienenfuettern.rsm-live.de
-  - http://www.bienenfuettern.de
-  - http://bienenfuettern.de
-  - http://www.bienen-fuettern.de
-  - http://bienen-fuettern.de
-  - http://www.bienenfüttern.de
-  - http://bienenfüttern.de
-  - http://www.bienen-füttern.de
-  - http://bienen-füttern.de
-  - https://www.bienenfuettern.rsm-live.de
-  - https://bienenfuettern.rsm-live.de
-  - https://www.bienenfuettern.de
-  - https://bienenfuettern.de
-  - https://www.bienen-fuettern.de
-  - https://bienen-fuettern.de
-  - https://www.bienenfüttern.de
-  - https://bienenfüttern.de
-  - https://www.bienen-füttern.de
-  - https://bienen-füttern.de
-- /var/www/html
-  - http://bmel.rsm-development.de
-- /var/www/de/rsm-development/bmel/500li/live/html
-  - http://live.500li.bmel.rsm-development.de
-  - http://500landinitiativen.de
-  - http://www.500landinitiativen.de
-  - https://live.500li.bmel.rsm-development.de
-  - https://500landinitiativen.de
-  - https://www.500landinitiativen.de
+### Projects
+
+- file:///var/www/de/rsm-live/wmbw/start-up-bw/www/html/current/web
+  - targets:
+    - http://www.start-up-bw.wmbw.rsm-live.de
+    - http://start-up-bw.wmbw.rsm-live.de
+    - https://www.start-up-bw.wmbw.rsm-live.de
+    - https://start-up-bw.wmbw.rsm-live.de
+  - ssl: true
+  - app: HTML project
+  - version: unknown
+- file:///var/www/html
+  - targets:
+    - http://wmbw.rsm-live.de
+    - http://www.wmbw.rsm-live.de
+    - http://wmbw.rsm-live.de
+    - https://www.wmbw.rsm-live.de
+    - https://wmbw.rsm-live.de
+  - ssl: true
+  - app: HTML project
+  - version: unknown
+- https://www.startupgipfel.de/registration/
+  - targets:
+    - http://www.start-up-bw.de
+    - http://start-up-bw.de
+    - http://www.startupbw.de
+    - http://startupbw.de
+  - ssl: false
+  - app: redirection
+  - version: not available
+- file:///var/www/de/rsm-stage/wmbw/start-up-bw/www/html/current/web
+  - targets:
+    - http://www.start-up-bw.wmbw.rsm-stage.de
+    - http://start-up-bw.wmbw.rsm-stage.de
+    - https://www.start-up-bw.wmbw.rsm-stage.de
+    - https://start-up-bw.wmbw.rsm-stage.de
+  - ssl: true
+  - app: TYPO3
+  - version: 8.7.1
 ```
 
 ### 1.3) HTML output
