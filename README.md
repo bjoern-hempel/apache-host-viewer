@@ -13,7 +13,7 @@ user$ git clone git@github.com:bjoern-hempel/apache-host-viewer.git .
 
 ## 1.) Usage
 
-### 1.1) Show the help dialog
+### 1.1) Show the help dialog (`--help`)
 
 ```
 user$ ~/apache-host-viewer/bin/apache-host-viewer --help
@@ -93,7 +93,7 @@ The markdown result could be:
   - version: 8.7.1
 ```
 
-### 1.3) HTML output (--html)
+### 1.3) HTML output (`--html`)
 
 The script uses the DUMP_VHOSTS function from `apachectl` (`apachectl -S`). This requires sudo credentials:
 
@@ -187,7 +187,7 @@ The markdown result could be:
 </html>
 ```
 
-### 1.4) JSON output (--json)
+### 1.4) JSON output (`--json`)
 
 The script uses the DUMP_VHOSTS function from `apachectl` (`apachectl -S`). This requires sudo credentials:
 
@@ -249,7 +249,7 @@ The markdown result could be:
 }
 ```
 
-### 1.5) Show additional system informations (--show-system-info)
+### 1.5) Show additional system informations (`--show-system-info`)
 
 The script uses the DUMP_VHOSTS function from `apachectl` (`apachectl -S`). This requires sudo credentials:
 
