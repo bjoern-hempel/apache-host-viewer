@@ -4,9 +4,10 @@
 PARAMETERS=()
 
 # default parameter
-JSON_OUTPUT=false
-COMPRESS_JSON=false
 MARKDOWN_OUTPUT=true
+JSON_OUTPUT=false
+HTML_OUTPUT=false
+COMPRESS_JSON=false
 SHOW_SYSTEM_INFORMATIONS=false
 DOCKER_NAME=""
 PARSE_VHOSTS=true
@@ -32,10 +33,25 @@ while [[ $# > 0 ]]; do
             ;;
 
         # help:
-        # help:  -j,    --json                    Shows the output as json and disable the markdown output
+        # help:  -m,    --markdown                Shows the output as markdown and disable all other output types (json, html) - default output
+        -m|--markdown)
+            MARKDOWN_OUTPUT=true
+                JSON_OUTPUT=false
+                HTML_OUTPUT=false
+            ;;
+
+        # help:  -j,    --json                    Shows the output as json and disable all other output types (markdown, html)
         -j|--json)
-            JSON_OUTPUT=true
             MARKDOWN_OUTPUT=false
+                JSON_OUTPUT=true
+                HTML_OUTPUT=false
+            ;;
+
+        # help:         --html                    Shows the output as html and disable all other output types (markdown, json)
+        --html)
+            MARKDOWN_OUTPUT=false
+                JSON_OUTPUT=false
+                HTML_OUTPUT=true
             ;;
 
         # help:         --compress-json           Compress the outputted json.

@@ -159,7 +159,7 @@ if [ "$OUTPUT_TARGET" != "" ]; then
 
         # create html from md file
         if $CREATE_HTML; then
-            md2html "$markdownFile.~tmp" "$htmlFile"
+            md2htmlFile "$markdownFile.~tmp" "$htmlFile"
         fi
 
         # create md file
@@ -192,5 +192,13 @@ if ! $SILENCE && $JSON_OUTPUT; then
     fi
 
     echo "$jsonOutput"
+fi
+
+if ! $SILENCE && $HTML_OUTPUT; then
+    markdownOutput=$(getMarkdownOfSystemAndDocumentRoots)
+
+    htmlOutput=$(md2html "$markdownOutput")
+
+    echo "$htmlOutput"
 fi
 

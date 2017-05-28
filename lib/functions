@@ -460,15 +460,11 @@ compressJson()
 # ------------
 md2html()
 {
-    local markdownFile="$1"
-    local    indexFile="$2"
-    local   targetPath=$(dirname "$indexFile")
-
-    local          cssFile="https://raw.githubusercontent.com/sindresorhus/github-markdown-css/gh-pages/github-markdown.css"
-    local          cssName="markdown.css"
-    local      cssFullpath="$targetPath/$cssName"
+    local  markdownContent="$1"
+    local          cssFile="${2:-markdown.css}"
     local       servername=$(hostname)
     local markdown2HtmlApp="markdown"
+    local        tmpMdFile=$(mktemp)
 
     # check if markdown app exists
     if ! applicationExists "$markdown2HtmlApp"; then
@@ -478,15 +474,6 @@ md2html()
         >&2 echo "user$ sudo apt install nodejs"
         >&2 echo "user$ sudo npm install markdown-to-html -g"
         return 2
-    fi
-
-    # download css file
-    wget -O "$cssFullpath" --quiet "$cssFile"
-
-    # check css file
-    if [ ! -f "$cssFullpath" ]; then
-        echo "It was not able to download the css file \"$cssFullpath\"."
-        return 1
     fi
 
     # markdown html before
@@ -500,7 +487,7 @@ md2html()
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta charset="UTF-8" />
         <title>$servername</title>
-        <link rel="stylesheet" href="$cssName">
+        <link rel="stylesheet" href="$cssFile">
         <style>
             .markdown-body {
                 box-sizing: border-box;
@@ -522,17 +509,61 @@ EndOfMessage
 </html>
 EndOfMessage
 
+    # create temporary md file
+    echo "$markdownContent" > "$tmpMdFile"
+
     # some changes with markdown
-    content=$(markdown "$markdownFile" | sed -e 's/<table>/<table style="width:100%;">/g')
+    content=$(markdown "$tmpMdFile" -h)
+    # | sed -e 's/<table>/<table style="width:100%;">/g')
+
+    # remove temp markdown file
+    rm "$tmpMdFile"
 
     # write html index file
-    echo "$head" > $indexFile
-    echo "$content" >> $indexFile
-    echo "$footer" >> $indexFile
+    echo "$head"
+    echo "$content"
+    echo "$footer"
 
     # return 0
     return 0
 }
+
+# ------------
+# Converts the given md file into a html file.
+#
+# @author  Björn Hempel <bjoern@hempel.li>
+# @version 1.0 (2017-05-28)
+# ------------
+md2htmlFile()
+{
+    local markdownFile="$1"
+    local    indexFile="$2"
+    local   targetPath=$(dirname "$indexFile")
+
+    local          cssFile="https://raw.githubusercontent.com/sindresorhus/github-markdown-css/gh-pages/github-markdown.css"
+    local          cssName="markdown.css"
+    local      cssFullpath="$targetPath/$cssName"
+
+    # download css file
+    wget -O "$cssFullpath" --quiet "$cssFile"
+
+    # check css file
+    if [ ! -f "$cssFullpath" ]; then
+        echo "It was not able to download the css file \"$cssFullpath\"."
+        return 1
+    fi
+
+    # convert the markdown content into html content
+    markdownContent=$(cat "$markdownFile")
+    htmlContent=$(md2html "$markdownContent" "$cssName")
+
+    # write html index file
+    echo "$htmlContent" > $indexFile
+
+    # return 0
+    return 0
+}
+
 
 # ------------
 # Analyzes the given project path and tries to find out the app and version number.
