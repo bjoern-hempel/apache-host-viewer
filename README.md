@@ -39,7 +39,7 @@ Usage: bin/apache-host-viewer [options...]
         --silence                 Disable the output.
 ```
 
-### 1.2) Simply get the output as markdown markup language
+### 1.2) Simply get all DocumentRoots as markdown markup language
 
 The script uses the DUMP_VHOSTS function from `apachectl` (`apachectl -S`). This requires sudo credentials:
 
