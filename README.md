@@ -13,7 +13,7 @@ user$ git clone git@github.com:bjoern-hempel/apache-host-viewer.git .
 
 ## 1.) Usage
 
-### 1.1) Showing the help dialog
+### 1.1) Show the help dialog
 
 ```
 user$ ~/apache-host-viewer/bin/apache-host-viewer --help
