@@ -325,9 +325,9 @@ The markdown result could be:
 
 You can use this parameter in combination with all other parameters (--markdown, --json, --html, --create-markdown, --create-json, --create-html).
 
-### 1.6) Create md file into a given folder
+### 1.6) Create md file into a given folder (`--output-target`)
 
-By default a markdown file (index.md) will be created. The following command also prints the mardkown result on the screen:
+The following command will create a markdown file (index.md) into the folder `/var/ww/html/server`. The following command also prints the markdown result on the screen:
 
 ```
 user$ sudo ~/apache-host-viewer/bin/apache-host-viewer --output-target=/var/www/html/server --output-name=index
