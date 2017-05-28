@@ -18,18 +18,25 @@ user$ git clone git@github.com:bjoern-hempel/apache-host-viewer.git .
 ```
 user$ ~/apache-host-viewer/bin/apache-host-viewer --help
 
-Usage: ~/apache-host-viewer/bin/apache-host-viewer [options...]
+Usage: bin/apache-host-viewer [options...]
  -h,    --help                    Shows this help.
 
  -j,    --json                    Shows the output as json and disable the markdown output
-
         --compress-json           Compress the outputted json.
+
+        --output-target           Writes the result into this target folder.
+        --output-name             Set the output name (default is "index").
+        --create-markdown         Creates a markdown file (--output-target must be set).
+        --create-json             Creates a json file (--output-target must be set).
+        --create-html             Creates a html file (--output-target must be set).
 
  -s,    --show-system-info        Shows system informations.
 
  -d,    --docker-container        Checks a docker machine instead of the local machine.
 
         --disable-vhost-parser    Disable the vhost parser.
+
+        --silence                 Disable the output.
 ```
 
 ### 1.2) Simply get the output as markdown markup language
