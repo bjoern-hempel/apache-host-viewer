@@ -129,7 +129,8 @@ The markdown result could be:
 | Username | Fullname |
 | ---- | ----- |
 | bjoern | Björn Hempel |
-| michael.huebe | Michael Hübe |
+| user2 | User 2 |
+| user3 | User 3 |
 
 ### Projects
 
