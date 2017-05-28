@@ -21,7 +21,9 @@ user$ ~/apache-host-viewer/bin/apache-host-viewer --help
 Usage: bin/apache-host-viewer [options...]
  -h,    --help                    Shows this help.
 
- -j,    --json                    Shows the output as json and disable the markdown output
+ -m,    --markdown                Shows the output as markdown and disable all other output types (json, html) - default output
+ -j,    --json                    Shows the output as json and disable all other output types (markdown, html)
+        --html                    Shows the output as html and disable all other output types (markdown, json)
         --compress-json           Compress the outputted json.
 
         --output-target           Writes the result into this target folder.
