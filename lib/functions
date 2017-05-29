@@ -224,7 +224,7 @@ getProjectNameFromVirtualHost()
 # ------------
 getNumberOfCpus()
 {
-    cat /proc/cpuinfo | grep "processor" | wc -l
+    grep pro /proc/cpuinfo -c
 }
 
 # ------------
@@ -258,6 +258,127 @@ getHdSizeGb()
 getHdUsedPercent()
 {
     df -h | grep '^/dev/' | grep -v 'boot' | awk '{print $5*1}'
+}
+
+# ------------
+# Return the status according the current used hd disc size.
+#
+# @author  Björn Hempel <bjoern@hempel.li>
+# @version 1.0 (2017-05-30)
+# ------------
+getHdUsedPercentStatus()
+{
+    local errorPercent="95"
+    local  warnPercent="80"
+
+    local currentPercent=$(getHdUsedPercent)
+
+    if [ $currentPercent -gt $errorPercent ]; then
+        echo 'error'
+        return 0
+    fi
+
+    if [ $currentPercent -gt $warnPercent ]; then
+        echo 'warn'
+        return 0
+    fi
+
+    echo 'ok'
+    return 0
+}
+
+# ------------
+# Gets the load average from the last minute.
+#
+# @author  Björn Hempel <bjoern@hempel.li>
+# @version 1.0 (2017-05-30)
+# ------------
+getLoadAverage1min()
+{
+    cat /proc/loadavg | awk '{print $1}'
+}
+
+# ------------
+# Gets the load average from the last 5 minutes.
+#
+# @author  Björn Hempel <bjoern@hempel.li>
+# @version 1.0 (2017-05-30)
+# ------------
+getLoadAverage5min()
+{
+    cat /proc/loadavg | awk '{print $2}'
+}
+
+# ------------
+# Gets the load average from the last 15 minutes.
+#
+# @author  Björn Hempel <bjoern@hempel.li>
+# @version 1.0 (2017-05-30)
+# ------------
+getLoadAverage15min()
+{
+    cat /proc/loadavg | awk '{print $3}'
+}
+
+# ------------
+# Gets the load average status.
+#
+# @author  Björn Hempel <bjoern@hempel.li>
+# @version 1.0 (2017-05-30)
+# ------------
+getLoadAverageStatus()
+{
+    local errorPercent="1.0"
+    local  warnPercent="0.8"
+
+    local  loadavg1min=$(getLoadAverage1min)
+    local  loadavg5min=$(getLoadAverage5min)
+    local loadavg15min=$(getLoadAverage15min)
+
+    local numberOfCpus=$(getNumberOfCpus)
+    local errorNumber=$(echo "$numberOfCpus * $errorPercent" | bc)
+    local  warnNumber=$(echo "$numberOfCpus * $warnPercent"  | bc)
+
+    # error status
+    if [ $(echo $loadavg1min'>'$errorNumber | bc -l) == "1" ] || [ $(echo $loadavg5min'>'$errorNumber | bc -l) == "1" ] || [ $(echo $loadavg15min'>'$errorNumber | bc -l) == "1" ]; then
+        echo 'error'
+        return 0
+    fi
+
+    # warn status
+    if [ $(echo $loadavg1min'>'$warnNumber | bc -l) == "1" ] || [ $(echo $loadavg5min'>'$warnNumber | bc -l) == "1" ] || [ $(echo $loadavg15min'>'$warnNumber | bc -l) == "1" ]; then
+        echo 'warn'
+        return 0
+    fi
+
+    # ok status
+    echo 'ok'
+    return 0
+}
+
+# ------------
+# Gets the overall status.
+#
+# @author  Björn Hempel <bjoern@hempel.li>
+# @version 1.0 (2017-05-30)
+# ------------
+getOverallStatus()
+{
+    local status1="$1"
+    local status2="$2"
+
+    if [ "$status1" == "error" ] || [ "$status2" == "error" ]; then
+        echo 'error'
+        return 0
+    fi
+
+    if [ "$status1" == "warn" ] || [ "$status2" == "warn" ]; then
+        echo 'warn'
+        return 0
+    fi
+
+    echo 'ok'
+    return 0
 }
 
 # ------------
@@ -396,6 +517,19 @@ getExternalIp()
 getMarkdownOfSystemAndDocumentRoots()
 {
     if $SHOW_SYSTEM_INFORMATIONS; then
+        local loadAverageStatus=$(getLoadAverageStatus)
+        local hdSizeStatus=$(getHdUsedPercentStatus)
+        local overallStatus=$(getOverallStatus "$loadAverageStatus" "$hdSizeStatus")
+
+        echo '### System status'
+        echo
+        echo '| Name | Value |'
+        echo '| ---- | ----- |'
+        echo '| overall status | '$overallStatus' |'
+        echo '| load average status | '$loadAverageStatus' |'
+        echo '| hd size status | '$hdSizeStatus' |'
+        echo
+
         echo '### System informations'
         echo
         echo '| Name | Value |'
@@ -412,8 +546,9 @@ getMarkdownOfSystemAndDocumentRoots()
         echo '| number of updateable applications | '$(getNumberOfInstallableApplications)' |'
         echo '| php version | '$(getPhpVersion)' |'
         echo '| mysql version | '$(getMysqlVersion)' |'
-
+        echo '| load average | '$(getLoadAverage1min)' '$(getLoadAverage5min)' '$(getLoadAverage15min)' |'
         echo
+
         echo '### Users'
         echo
 
