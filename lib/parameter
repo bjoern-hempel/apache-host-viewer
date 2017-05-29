@@ -109,7 +109,6 @@ while [[ $# > 0 ]]; do
             SHOW_SYSTEM_INFORMATIONS=true
             ;;
 
-        # help:
         # help:         --show-links              Shows links inside the markdown and html file
         --show-links)
             SHOW_LINKS=true
