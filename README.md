@@ -346,7 +346,7 @@ user$ sudo ~/apache-host-viewer/bin/apache-host-viewer --output-target=/var/www/
 You can suppress all outputs (except error messages) with the parameter `--silence`. This is usefull if you like to use this command as a cronjob task. The following command creates a md, a json and a html file into the folder `/var/www/html/server` and don't output any message to the command line:
 
 ```
-user$ sudo ~/apache-host-viewer/bin/apache-host-viewer --output-target=/var/www/html/server --output-name=index --show-system-info --create-json --create-html --silence
+user$ sudo ~/apache-host-viewer/bin/apache-host-viewer --output-target=/var/www/html/server --output-name=index --show-system-info --show-links --create-json --create-html --silence
 ```
 
 ### 1.9) Check docker container instead of local system
