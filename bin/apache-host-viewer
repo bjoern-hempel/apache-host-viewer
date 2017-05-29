@@ -69,6 +69,7 @@ fi
 
 # save all hosts including the scheme within this container
 declare -A schemeHostsContainer
+declare -A nameContainer
 
 if $PARSE_VHOSTS; then
     if [ "$DOCKER_NAME" == "" ] && ! applicationExists apachectl; then
@@ -128,8 +129,9 @@ if $PARSE_VHOSTS; then
             domain="http://$domain"
         fi
 
-        targetUri=$(getTargetFromVirtualHost "$path" $line "/etc/apache2" "$DOCKER_NAME")
-        lastStatus=$?
+        virtualHost=$(getVirtualHost "$path" $line "/etc/apache2" "$DOCKER_NAME")
+          targetUri=$(getTargetFromVirtualHost "$virtualHost")
+         lastStatus=$?
 
         if [ $lastStatus -gt 0 ]; then
             continue
@@ -141,6 +143,15 @@ if $PARSE_VHOSTS; then
             schemeHostsContainer[$targetUri]="$currentDomainString"$'\n'"$domain"
         else
             schemeHostsContainer[$targetUri]="$domain"
+        fi
+
+        projectName=$(getProjectNameFromVirtualHost "$virtualHost")
+         lastStatus=$?
+
+        if [ $lastStatus -eq 0 ]; then
+            if [ -z "${nameContainer[$targetUri]}" ]; then
+                nameContainer[$targetUri]="$projectName"
+            fi
         fi
     done
 fi

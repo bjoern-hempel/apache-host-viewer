@@ -38,6 +38,19 @@ getContentFromLineToMatch()
 
     possibleLines=$(echo "$possibleLines" | wc -l)
 
+    # try to catch the comment as well
+    while [ $lineFrom -gt 1 ]; do
+        local currentLine=$(tail -n+$((lineFrom-1)) "$file" | head -n1)
+
+        # we want this line (empty lines or commented out lines)
+        if [[ "$currentLine" =~ ^([[:space:]])*$ ]] || [[ "$currentLine" =~ ^([[:space:]])*# ]]; then
+            ((lineFrom--))
+            ((lines++))
+        else
+            break;
+        fi
+    done
+
     # try to find the end tag of VirtualHost (</VirtualHost>)
     if [ $possibleLines -gt 0 ]; then
         while ! $found; do
@@ -113,7 +126,7 @@ getVirtualHost()
 # @author  Björn Hempel <bjoern@hempel.li>
 # @version 1.0 (2017-05-23)
 # ------------
-getTargetFromVirtualHost()
+getTargetFromVirtualHostFile()
 {
     shopt -s nocasematch
 
@@ -123,6 +136,26 @@ getTargetFromVirtualHost()
     local dockerName="$4"
 
     local virtualHost=$(getVirtualHost "$file" $lineFrom "$serverRoot" "$dockerName")
+
+    getTargetFromVirtualHost "$virtualHost"
+
+    local lastStatus=$?
+
+    return $lastStatus
+}
+
+# ------------
+# Tries to extracts the target (document root, proxy target, redirect, etc)
+# from the given virtual host block.
+#
+# @author  Björn Hempel <bjoern@hempel.li>
+# @version 1.0 (2017-05-23)
+# ------------
+getTargetFromVirtualHost()
+{
+    shopt -s nocasematch
+
+    local virtualHost="$1"
 
     local documentRoot=$(echo "$virtualHost" | grep -i "DocumentRoot" | head -n 1)
     local proxyPass=$(echo "$virtualHost" | grep -i "ProxyPass[ $'\t']" | head -n 1)
@@ -158,6 +191,29 @@ getTargetFromVirtualHost()
     fi
 
     return 1
+}
+
+# ------------
+# Tries to get the name from the project.
+#
+# @author  Björn Hempel <bjoern@hempel.li>
+# @version 1.0 (2017-05-29)
+# ------------
+getProjectNameFromVirtualHost()
+{
+    shopt -s nocasematch
+
+    local virtualHost="$1"
+    local nameName="name"
+
+    local name=$(echo "$virtualHost" | grep "^#\([[:space:]]\)\+name:" | head -n1 | sed "s/^#[ ]\+name:[ ]\+//i")
+
+    if [ "$name" == "" ]; then
+        return 1
+    fi
+
+    echo "$name"
+    return 0
 }
 
 # ------------
@@ -378,23 +434,30 @@ getMarkdownOfSystemAndDocumentRoots()
     for target in "${!schemeHostsContainer[@]}"; do
         eval "declare -A project="$(analyzeProject "$target")
 
-        echo "- $target"
+        if [ -z "${nameContainer[$target]}" ]; then
+            local projectName=$target
+        else
+            local projectName=${nameContainer[$target]}
+        fi
+
+        echo "- $projectName"
 
         readarray -t schemeHosts <<< "${schemeHostsContainer[$target]}"
 
         local ssl=false
 
         if [ ${#schemeHosts[@]} -le 1 ]; then
-            echo "  - target: ${schemeHosts[0]}"
+            echo "  - domain: ${schemeHosts[0]}"
             [[ "${schemeHosts[0]}" =~ ^https ]] && ssl=true
         else
-            echo "  - targets:"
+            echo "  - domains:"
             for schemeHost in "${schemeHosts[@]}"; do
                 echo "    - $schemeHost"
                 [[ "$schemeHost" =~ ^https ]] && ssl=true
             done
         fi
 
+        echo "  - target: $target"
         echo "  - ssl: "$($ssl && echo 'true' || echo 'false')
         echo "  - app: ${project[app]}"
         echo "  - version: ${project[version]}"
@@ -439,13 +502,13 @@ getJsonOfSystemAndDocumentRoots()
         echo '                                     },'
     fi
 
-    echo '    "projects":                      {'
+    echo '    "projects":                      ['
     local counter=0
     for target in "${!schemeHostsContainer[@]}"; do
         eval "declare -A project="$(analyzeProject "$target")
 
         [ $counter -gt 0 ] && echo ","
-        echo    "                                         \"$target\": {"
+        echo    "                                         {"
         echo    "                                             \"domains\": ["
 
         readarray -t schemeHosts <<< "${schemeHostsContainer[$target]}"
@@ -461,6 +524,7 @@ getJsonOfSystemAndDocumentRoots()
         done
         echo
         echo    "                                             ],"
+        echo    "                                             \"target\": \"$target\","
         echo    "                                             \"ssl\": "$($ssl && echo 'true' || echo 'false')","
         echo    "                                             \"app\": \"${project[app]}\","
         echo    "                                             \"version\": \"${project[version]}\""
@@ -468,7 +532,7 @@ getJsonOfSystemAndDocumentRoots()
         ((counter++))
     done
     echo
-    echo '                                     }'
+    echo '                                     ]'
     echo '}'
 }
 
