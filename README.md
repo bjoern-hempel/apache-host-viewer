@@ -33,6 +33,7 @@ Usage: bin/apache-host-viewer [options...]
         --create-html             Creates a html file (--output-target must be set).
 
  -s,    --show-system-info        Shows system informations.
+        --show-links              Shows links inside the markdown and html file
 
  -d,    --docker-container        Checks a docker machine instead of the local machine.
 
