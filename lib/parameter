@@ -9,6 +9,7 @@ JSON_OUTPUT=false
 HTML_OUTPUT=false
 COMPRESS_JSON=false
 SHOW_SYSTEM_INFORMATIONS=false
+SHOW_LINKS=false
 DOCKER_NAME=""
 PARSE_VHOSTS=true
 OUTPUT_TARGET=""
@@ -106,6 +107,12 @@ while [[ $# > 0 ]]; do
         # help:  -s,    --show-system-info        Shows system informations.
         -s|--show-system-info)
             SHOW_SYSTEM_INFORMATIONS=true
+            ;;
+
+        # help:
+        # help:         --show-links              Shows links inside the markdown and html file
+        --show-links)
+            SHOW_LINKS=true
             ;;
 
         # help:

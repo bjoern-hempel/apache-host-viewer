@@ -368,10 +368,10 @@ getNumberOfInstallableApplications()
 # ------------
 getInternalIp ()
 {
-  # get from first ip address
-  local ip=$(/sbin/ifconfig | grep -E 'inet (addr|Adresse):' | awk '{print $2}' | sed -E 's/(Adresse|addr)://' | grep -v '127.0.0.1' | head -n 1)
+    # get from first ip address
+    local ip=$(/sbin/ifconfig | grep -E 'inet (addr|Adresse):' | awk '{print $2}' | sed -E 's/(Adresse|addr)://' | grep -v '127.0.0.1' | head -n 1)
 
-  echo $ip
+    echo $ip
 }
 
 # ------------
@@ -463,6 +463,16 @@ getMarkdownOfSystemAndDocumentRoots()
         echo "  - version: ${project[version]}"
     done
     echo
+
+    if $SHOW_LINKS; then
+        echo '### Links'
+        echo
+        if $CREATE_JSON; then
+            echo "Show this document as json file: [$OUTPUT_NAME.$JSON_SUFFIX]($OUTPUT_NAME.$JSON_SUFFIX)"
+        fi
+        echo "Show this document as markdown file: [$OUTPUT_NAME.$MARKDOWN_SUFFIX]($OUTPUT_NAME.$MARKDOWN_SUFFIX)"
+        echo
+    fi
 }
 
 # ------------
@@ -509,6 +519,9 @@ getJsonOfSystemAndDocumentRoots()
 
         [ $counter -gt 0 ] && echo ","
         echo    "                                         {"
+        if [ ! -z "${nameContainer[$target]}" ]; then
+            echo    "                                             \"name\": \"${nameContainer[$target]}\","
+        fi
         echo    "                                             \"domains\": ["
 
         readarray -t schemeHosts <<< "${schemeHostsContainer[$target]}"
