@@ -578,7 +578,9 @@ md2htmlFile()
     local      cssFullpath="$targetPath/$cssName"
 
     # download css file
-    wget -O "$cssFullpath" --quiet "$cssFile"
+    if [ ! -f "$cssFile" ]; then
+        wget -O "$cssFullpath" --quiet "$cssFile"
+    fi
 
     # check css file
     if [ ! -f "$cssFullpath" ]; then
