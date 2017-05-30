@@ -519,21 +519,24 @@ getExternalIp()
 # ------------
 getMarkdownOfSystemAndDocumentRoots()
 {
+    echo '# Host "'$(hostname)'"'
+    echo
+
     if $SHOW_SYSTEM_INFORMATIONS; then
         local loadAverageStatus=$(getLoadAverageStatus)
         local hdSizeStatus=$(getHdUsedPercentStatus)
         local overallStatus=$(getOverallStatus "$loadAverageStatus" "$hdSizeStatus")
 
-        echo '### System status'
+        echo '## System status'
         echo
         echo '| Name | Value |'
         echo '| ---- | ----- |'
         echo '| overall status | '$overallStatus' |'
         echo '| load average status | '$loadAverageStatus' |'
-        echo '| hd size status | '$hdSizeStatus' |'
+        echo '| disc size available status | '$hdSizeStatus' |'
         echo
 
-        echo '### System informations'
+        echo '## System informations'
         echo
         echo '| Name | Value |'
         echo '| ---- | ----- |'
@@ -552,7 +555,7 @@ getMarkdownOfSystemAndDocumentRoots()
         echo '| load average | '$(getLoadAverage1min)' '$(getLoadAverage5min)' '$(getLoadAverage15min)' |'
         echo
 
-        echo '### Users'
+        echo '## Users'
         echo
 
         echo '| Username | Fullname |'
@@ -567,7 +570,7 @@ getMarkdownOfSystemAndDocumentRoots()
         echo 
     fi
 
-    echo '### Projects'
+    echo '## Projects'
     echo
     for target in "${!schemeHostsContainer[@]}"; do
         eval "declare -A project="$(analyzeProject "$target")
@@ -603,7 +606,7 @@ getMarkdownOfSystemAndDocumentRoots()
     echo
 
     if $SHOW_LINKS; then
-        echo '### Links'
+        echo '## Links'
         echo
         if $CREATE_JSON; then
             echo "Show this document as json file: [$OUTPUT_NAME.$JSON_SUFFIX]($OUTPUT_NAME.$JSON_SUFFIX)"
@@ -624,6 +627,10 @@ getJsonOfSystemAndDocumentRoots()
     echo '{'
 
     if $SHOW_SYSTEM_INFORMATIONS; then
+        local loadAverageStatus=$(getLoadAverageStatus)
+        local hdSizeStatus=$(getHdUsedPercentStatus)
+        local overallStatus=$(getOverallStatus "$loadAverageStatus" "$hdSizeStatus")
+
         echo '    "created-at":                    "'$(date "+%Y-%m-%d %H:%M:%S")'",'
         echo '    "os-name-full":                  "'$(getOSName)'",'
         echo '    "hostname":                      "'$(hostname)'",'
@@ -636,6 +643,16 @@ getJsonOfSystemAndDocumentRoots()
         echo '    "updateable-application-number": "'$(getNumberOfInstallableApplications)'",'
         echo '    "php-version":                   "'$(getPhpVersion)'",'
         echo '    "mysql-version":                 "'$(getMysqlVersion)'",'
+        echo '    "load-average":                  {'
+        echo '                                         "1":               "'$(getLoadAverage1min)'",'
+        echo '                                         "5":               "'$(getLoadAverage5min)'",'
+        echo '                                         "15":              "'$(getLoadAverage15min)'"'
+        echo '                                     },'
+        echo '    "status":                        {'
+        echo '                                         "overall":         "'$overallStatus'",'
+        echo '                                         "load-average":    "'$loadAverageStatus'",'
+        echo '                                         "space-available": "'$hdSizeStatus'"'
+        echo '    },'
 
         local users=$(getUsers)
         echo '    "users":                         {'
