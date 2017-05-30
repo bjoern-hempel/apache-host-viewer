@@ -26,7 +26,7 @@ Usage: bin/apache-host-viewer [options...]
         --html                    Shows the output as html and disable all other output types (markdown, json)
         --compress-json           Compress the outputted json.
 
-        --output-target           Writes the result into this target folder.
+        --output-target           Writes also the result into this target folder.
         --output-name             Set the output name (default is "index").
         --create-markdown         Creates a markdown file (--output-target must be set).
         --create-json             Creates a json file (--output-target must be set).
