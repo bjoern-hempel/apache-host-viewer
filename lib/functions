@@ -274,7 +274,7 @@ getHdUsedPercentStatus()
     local currentPercent=$(getHdUsedPercent)
 
     if [ $currentPercent -gt $errorPercent ]; then
-        echo 'error'
+        echo 'critical'
         return 0
     fi
 
@@ -339,9 +339,9 @@ getLoadAverageStatus()
     local errorNumber=$(echo "$numberOfCpus * $errorPercent" | bc)
     local  warnNumber=$(echo "$numberOfCpus * $warnPercent"  | bc)
 
-    # error status
+    # critical status
     if [ $(echo $loadavg1min'>'$errorNumber | bc -l) == "1" ] || [ $(echo $loadavg5min'>'$errorNumber | bc -l) == "1" ] || [ $(echo $loadavg15min'>'$errorNumber | bc -l) == "1" ]; then
-        echo 'error'
+        echo 'critical'
         return 0
     fi
 
@@ -364,18 +364,21 @@ getLoadAverageStatus()
 # ------------
 getOverallStatus()
 {
-    local status1="$1"
-    local status2="$2"
+    # check for critical status
+    for status in "$@"; do
+        if [ "$status" == "critical" ]; then
+            echo "critical"
+            return 0
+        fi
+    done
 
-    if [ "$status1" == "error" ] || [ "$status2" == "error" ]; then
-        echo 'error'
-        return 0
-    fi
-
-    if [ "$status1" == "warn" ] || [ "$status2" == "warn" ]; then
-        echo 'warn'
-        return 0
-    fi
+    # check for warn status
+    for status in "$@"; do
+        if [ "$status" == "warn" ]; then
+            echo "warn"
+            return 0
+        fi
+    done
 
     echo 'ok'
     return 0
