@@ -61,7 +61,7 @@ while [[ $# > 0 ]]; do
             ;;
 
         # help:
-        # help:         --output-target           Writes the result into this target folder.
+        # help:         --output-target           Writes also the result into this target folder.
         --output-target)
             OUTPUT_TARGET="$2"
             shift
