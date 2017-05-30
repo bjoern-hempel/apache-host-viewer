@@ -506,7 +506,7 @@ getInternalIp ()
 # ------------
 getExternalIp()
 {
-    local ip=$(curl -s https://api.ipify.org)
+    local ip=$(curl --insecure -s https://api.ipify.org)
 
     echo "$ip"
 }
