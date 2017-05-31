@@ -512,6 +512,21 @@ getExternalIp()
 }
 
 # ------------
+# Returns the ip from given domain (dig).
+#
+# @author  Björn Hempel <bjoern@hempel.li>
+# @version 1.0 (2017-06-01)
+# ------------
+getIpFromDomain()
+{
+    local domain=$(echo "$1" | sed 's/^http[s]\?:\/\///i')
+
+    local ip=$(dig "$domain" +short)
+
+    echo "$ip"
+}
+
+# ------------
 # Returns a markdown of system informations and document roots.
 #
 # @author  Björn Hempel <bjoern@hempel.li>
@@ -596,6 +611,19 @@ getMarkdownOfSystemAndDocumentRoots()
                 echo "    - $schemeHost"
                 [[ "$schemeHost" =~ ^https ]] && ssl=true
             done
+        fi
+
+        if [ "${schemeHostsUnassignedContainer[$target]}" != "" ]; then
+            readarray -t schemeHostsUnassiged <<< "${schemeHostsUnassignedContainer[$target]}"
+
+            if [ ${#schemeHostsUnassiged[@]} -le 1 ]; then
+                echo "  - unassigned domain: ${schemeHostsUnassiged[0]}"
+            else
+                echo "  - unassigned domains:"
+                for schemeHostUnassiged in "${schemeHostsUnassiged[@]}"; do
+                    echo "    - $schemeHostUnassiged"
+                done
+            fi
         fi
 
         echo "  - target: $target"

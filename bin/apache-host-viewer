@@ -67,8 +67,12 @@ if [[ $userId -ne 0 ]]; then
     exit 1
 fi
 
+# get external ip
+externalIp=$(getExternalIp)
+
 # save all hosts including the scheme within this container
 declare -A schemeHostsContainer
+declare -A schemeHostsUnassignedContainer
 declare -A nameContainer
 
 if $PARSE_VHOSTS; then
@@ -138,11 +142,23 @@ if $PARSE_VHOSTS; then
         fi
 
         currentDomainString="${schemeHostsContainer[$targetUri]}"
+        currentDomainUnassigedString="${schemeHostsUnassignedContainer[$targetUri]}"
 
-        if [ "$currentDomainString" != "" ]; then
-            schemeHostsContainer[$targetUri]="$currentDomainString"$'\n'"$domain"
+        ipDomain=$(getIpFromDomain "$domain")
+
+        # collect domain names
+        if [ "$externalIp" == "$ipDomain" ]; then
+            if [ "$currentDomainString" != "" ]; then
+                schemeHostsContainer[$targetUri]="$currentDomainString"$'\n'"$domain"
+            else
+                schemeHostsContainer[$targetUri]="$domain"
+            fi
         else
-            schemeHostsContainer[$targetUri]="$domain"
+            if [ "$currentDomainUnassigedString" != "" ]; then
+                schemeHostsUnassignedContainer[$targetUri]="$currentDomainUnassigedString"$'\n'"$domain"
+            else
+                schemeHostsUnassignedContainer[$targetUri]="$domain"
+            fi
         fi
 
         projectName=$(getProjectNameFromVirtualHost "$virtualHost")
