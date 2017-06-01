@@ -357,6 +357,25 @@ getLoadAverageStatus()
 }
 
 # ------------
+# Gets the unassigned domain status.
+#
+# @author  Björn Hempel <bjoern@hempel.li>
+# @version 1.0 (2017-06-02)
+# ------------
+getUnassignedDomainStatus()
+{
+    local numberUnassignedDomains=${#schemeHostsUnassignedContainer[@]}
+
+    if [ $numberUnassignedDomains -gt 0 ]; then
+        echo "warn"
+        return 0
+    fi
+
+    echo "ok"
+    return 0
+}
+
+# ------------
 # Gets the overall status.
 #
 # @author  Björn Hempel <bjoern@hempel.li>
@@ -540,7 +559,8 @@ getMarkdownOfSystemAndDocumentRoots()
     if $SHOW_SYSTEM_INFORMATIONS; then
         local loadAverageStatus=$(getLoadAverageStatus)
         local hdSizeStatus=$(getHdUsedPercentStatus)
-        local overallStatus=$(getOverallStatus "$loadAverageStatus" "$hdSizeStatus")
+        local unassignedDomainStatus=$(getUnassignedDomainStatus)
+        local overallStatus=$(getOverallStatus "$loadAverageStatus" "$hdSizeStatus" "$unassignedDomainStatus")
 
         echo '## System status'
         echo
@@ -549,6 +569,7 @@ getMarkdownOfSystemAndDocumentRoots()
         echo '| overall status | '$overallStatus' |'
         echo '| load average status | '$loadAverageStatus' |'
         echo '| disc size available status | '$hdSizeStatus' |'
+        echo '| unassigned domain status | '$unassignedDomainStatus' |'
         echo
 
         echo '## System informations'
