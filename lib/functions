@@ -46,6 +46,7 @@ getContentFromLineToMatch()
         if [[ "$currentLine" =~ ^([[:space:]])*$ ]] || [[ "$currentLine" =~ ^([[:space:]])*# ]]; then
             ((lineFrom--))
             ((lines++))
+            ((possibleLines++))
         else
             break;
         fi
@@ -364,12 +365,19 @@ getLoadAverageStatus()
 # ------------
 getUnassignedDomainStatus()
 {
-    local numberUnassignedDomains=${#schemeHostsUnassignedContainer[@]}
+    for target in "${!schemeHostsUnassignedContainer[@]}"; do
+        if [ "${schemeHostsUnassignedContainer[$target]}" != "" ]; then
+            readarray -t schemeHostsUnassiged <<< "${schemeHostsUnassignedContainer[$target]}"
 
-    if [ $numberUnassignedDomains -gt 0 ]; then
-        echo "warn"
-        return 0
-    fi
+            if [ ${#schemeHostsUnassiged[@]} -gt 0 ]; then
+                echo "warn"
+                return 0
+            else
+                echo "ok"
+                return 0
+            fi
+        fi
+    done
 
     echo "ok"
     return 0
@@ -678,7 +686,8 @@ getJsonOfSystemAndDocumentRoots()
     if $SHOW_SYSTEM_INFORMATIONS; then
         local loadAverageStatus=$(getLoadAverageStatus)
         local hdSizeStatus=$(getHdUsedPercentStatus)
-        local overallStatus=$(getOverallStatus "$loadAverageStatus" "$hdSizeStatus")
+        local unassignedDomainStatus=$(getUnassignedDomainStatus)
+        local overallStatus=$(getOverallStatus "$loadAverageStatus" "$hdSizeStatus" "$unassignedDomainStatus")
 
         echo '    "created-at":                    "'$(date "+%Y-%m-%d %H:%M:%S")'",'
         echo '    "os-name-full":                  "'$(getOSName)'",'
@@ -693,14 +702,15 @@ getJsonOfSystemAndDocumentRoots()
         echo '    "php-version":                   "'$(getPhpVersion)'",'
         echo '    "mysql-version":                 "'$(getMysqlVersion)'",'
         echo '    "load-average":                  {'
-        echo '                                         "1":               "'$(getLoadAverage1min)'",'
-        echo '                                         "5":               "'$(getLoadAverage5min)'",'
-        echo '                                         "15":              "'$(getLoadAverage15min)'"'
+        echo '                                         "1":                 "'$(getLoadAverage1min)'",'
+        echo '                                         "5":                 "'$(getLoadAverage5min)'",'
+        echo '                                         "15":                "'$(getLoadAverage15min)'"'
         echo '                                     },'
         echo '    "status":                        {'
-        echo '                                         "overall":         "'$overallStatus'",'
-        echo '                                         "load-average":    "'$loadAverageStatus'",'
-        echo '                                         "space-available": "'$hdSizeStatus'"'
+        echo '                                         "overall":           "'$overallStatus'",'
+        echo '                                         "load-average":      "'$loadAverageStatus'",'
+        echo '                                         "space-available":   "'$hdSizeStatus'",'
+        echo '                                         "unassigned-domain": "'$unassignedDomainStatus'"'
         echo '    },'
 
         local users=$(getUsers)

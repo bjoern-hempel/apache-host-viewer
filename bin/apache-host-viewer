@@ -83,10 +83,15 @@ if $PARSE_VHOSTS; then
     lines=$(executeLocallyOrOnDocker "apachectl -S | grep -E \"(namevhost|alias)\"" "$DOCKER_NAME")
     serverRoot=$(executeLocallyOrOnDocker "apachectl -S | grep ServerRoot | awk '{print \$2}' | sed -e 's/\"//g'" "$DOCKER_NAME")
 
-    # last port, last domain, last config
-      port=""
-    domain=""
-    config=""
+    # last port, last domain, last config, last path, last line, last virtual host, last target uri, last last status
+           port=""
+         domain=""
+         config=""
+           path=""
+           line=""
+    virtualHost=""
+      targetUri=""
+     lastStatus=""
 
     # split lines from apachectl config output
     lineArray=()
@@ -111,11 +116,20 @@ if $PARSE_VHOSTS; then
               port=$(echo "$line" | awk '{print $2}')
             domain=$(echo "$line" | awk '{print $4}')
             config=$(echo "$line" | awk '{print $5}')
+
+                path=$(shopt -s nocasematch && [[ "$config" =~ \(([./a-z0-9\-]+) ]] && echo "${BASH_REMATCH[1]}")
+            lineFrom=$(shopt -s nocasematch && [[ "$config" =~ :([0-9]+)\) ]] && echo "${BASH_REMATCH[1]}")
+
+            virtualHost=$(getVirtualHost "$path" $lineFrom "/etc/apache2" "$DOCKER_NAME")
+              targetUri=$(getTargetFromVirtualHost "$virtualHost")
+             lastStatus=$?
         fi
 
-        path=$(shopt -s nocasematch && [[ "$config" =~ \(([./a-z0-9\-]+) ]] && echo "${BASH_REMATCH[1]}")
-        line=$(shopt -s nocasematch && [[ "$config" =~ :([0-9]+)\) ]] && echo "${BASH_REMATCH[1]}")
+        if [ $lastStatus -gt 0 ]; then
+            continue
+        fi
 
+        # translate domain
         if [[ "$domain" =~ xn-- ]]; then
             # check that idn is installed
             if ! applicationExists idn; then
@@ -127,33 +141,26 @@ if $PARSE_VHOSTS; then
             domain=$(echo "$domain" | idn --idna-to-unicode)
         fi
 
+        # add protocol to domain
         if [ $port -eq 443 ]; then
             domain="https://$domain"
         else
             domain="http://$domain"
         fi
 
-        virtualHost=$(getVirtualHost "$path" $line "/etc/apache2" "$DOCKER_NAME")
-          targetUri=$(getTargetFromVirtualHost "$virtualHost")
-         lastStatus=$?
-
-        if [ $lastStatus -gt 0 ]; then
-            continue
+        # collect domain names
+        currentDomainString="${schemeHostsContainer[$targetUri]}"
+        if [ "$currentDomainString" != "" ]; then
+            schemeHostsContainer[$targetUri]="$currentDomainString"$'\n'"$domain"
+        else
+            schemeHostsContainer[$targetUri]="$domain"
         fi
 
-        currentDomainString="${schemeHostsContainer[$targetUri]}"
+        # check assignment status
         currentDomainUnassigedString="${schemeHostsUnassignedContainer[$targetUri]}"
+                            ipDomain=$(getIpFromDomain "$domain")
 
-        ipDomain=$(getIpFromDomain "$domain")
-
-        # collect domain names
-        if [ "$externalIp" == "$ipDomain" ]; then
-            if [ "$currentDomainString" != "" ]; then
-                schemeHostsContainer[$targetUri]="$currentDomainString"$'\n'"$domain"
-            else
-                schemeHostsContainer[$targetUri]="$domain"
-            fi
-        else
+        if [ "$externalIp" != "$ipDomain" ]; then
             if [ "$currentDomainUnassigedString" != "" ]; then
                 schemeHostsUnassignedContainer[$targetUri]="$currentDomainUnassigedString"$'\n'"$domain"
             else
@@ -161,6 +168,7 @@ if $PARSE_VHOSTS; then
             fi
         fi
 
+        # add project name
         projectName=$(getProjectNameFromVirtualHost "$virtualHost")
          lastStatus=$?
 
