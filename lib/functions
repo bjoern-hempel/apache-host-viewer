@@ -659,6 +659,7 @@ getMarkdownOfSystemAndDocumentRoots()
         echo "  - ssl: "$($ssl && echo 'true' || echo 'false')
         echo "  - app: ${project[app]}"
         echo "  - version: ${project[version]}"
+        echo "  - apache config: ${pathContainer[$target]}"
     done
     echo
 
@@ -754,7 +755,8 @@ getJsonOfSystemAndDocumentRoots()
         echo    "                                             \"target\": \"$target\","
         echo    "                                             \"ssl\": "$($ssl && echo 'true' || echo 'false')","
         echo    "                                             \"app\": \"${project[app]}\","
-        echo    "                                             \"version\": \"${project[version]}\""
+        echo    "                                             \"version\": \"${project[version]}\","
+        echo    "                                             \"apache-config\": \"${pathContainer[$target]}\""
         echo -n "                                         }"
         ((counter++))
     done

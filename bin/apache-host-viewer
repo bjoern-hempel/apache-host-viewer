@@ -74,6 +74,7 @@ externalIp=$(getExternalIp)
 declare -A schemeHostsContainer
 declare -A schemeHostsUnassignedContainer
 declare -A nameContainer
+declare -A pathContainer
 
 if $PARSE_VHOSTS; then
     if [ "$DOCKER_NAME" == "" ] && ! applicationExists apachectl; then
@@ -123,6 +124,11 @@ if $PARSE_VHOSTS; then
             virtualHost=$(getVirtualHost "$path" $lineFrom "/etc/apache2" "$DOCKER_NAME")
               targetUri=$(getTargetFromVirtualHost "$virtualHost")
              lastStatus=$?
+
+            # add path
+            if [ $lastStatus -le 0 ] && [ -z "${pathContainer[$targetUri]}" ]; then
+                pathContainer[$targetUri]="$path:$lineFrom"
+            fi
         fi
 
         if [ $lastStatus -gt 0 ]; then
@@ -171,7 +177,6 @@ if $PARSE_VHOSTS; then
         # add project name
         projectName=$(getProjectNameFromVirtualHost "$virtualHost")
          lastStatus=$?
-
         if [ $lastStatus -eq 0 ]; then
             if [ -z "${nameContainer[$targetUri]}" ]; then
                 nameContainer[$targetUri]="$projectName"
