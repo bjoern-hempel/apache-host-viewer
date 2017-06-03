@@ -67,8 +67,15 @@ if [[ $userId -ne 0 ]]; then
     exit 1
 fi
 
+# load configurations and do some preparations
+source "$pathRoot/config/paths"
+source "$pathRoot/lib/prepare"
+
 # get external ip
 externalIp=$(getExternalIp)
+
+# get current timestamp
+scriptStartTime=$(date +%s)
 
 # save all hosts including the scheme within this container
 declare -A schemeHostsContainer
@@ -182,6 +189,20 @@ if $PARSE_VHOSTS; then
                 nameContainer[$targetUri]="$projectName"
             fi
         fi
+
+        # safe some configs
+             targetUriConfigPath=$(getTargetUriConfigName "$ETC_APACHE_HOST_VIEWER_DATA" "$targetUri")
+                domainConfigPath="$targetUriConfigPath/"$(getFileSystemSafeString "$domain")
+        targetUriFirstSeenAtPath="$targetUriConfigPath/$FIRST_SEEN_AT"
+           domainFirstSeenAtPath="$domainConfigPath/$FIRST_SEEN_AT"
+
+        # create folder
+        [ ! -d "$targetUriConfigPath" ] && mkdir -p "$targetUriConfigPath"
+        [ ! -d "$domainConfigPath"    ] && mkdir -p "$domainConfigPath"
+
+        # set first seen time for target uri and / or domain
+        [ ! -f "$targetUriFirstSeenAtPath" ] && echo "$scriptStartTime" > "$targetUriFirstSeenAtPath"
+        [ ! -f "$domainFirstSeenAtPath"    ] && echo "$scriptStartTime" > "$domainFirstSeenAtPath"
     done
 fi
 

@@ -1,0 +1,7 @@
+#!/bin/bash
+
+# add config folder if it doesn't exists
+if [ ! -d "$ETC_APACHE_HOST_VIEWER_DATA" ]; then
+    mkdir -p "$ETC_APACHE_HOST_VIEWER_DATA"
+fi
+

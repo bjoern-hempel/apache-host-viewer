@@ -1,0 +1,7 @@
+# path configurations
+ETC_APACHE_HOST_VIEWER="/etc/apache-host-viewer"
+ETC_APACHE_HOST_VIEWER_DATA="$ETC_APACHE_HOST_VIEWER/data"
+
+# var names
+FIRST_SEEN_AT="FIRST_SEEN_AT"
+

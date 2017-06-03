@@ -12,6 +12,37 @@ applicationExists()
 }
 
 # ------------
+# Returns a file system safe string.
+#
+# @author  Björn Hempel  <bjoern@hempel.li>
+# @version 1.0 (2017-06-03)
+# ------------
+getFileSystemSafeString()
+{
+    local replacer=${2:--}
+
+    echo "$1" | sed 's@://@~@g' | sed "s/[^A-Za-z0-9\.\-~]/${replacer}/g" | sed "s/[${replacer}]\+/${replacer}/g" | tr '[A-Z]' '[a-z]'
+}
+
+# ------------
+# Returns the target uri config name.
+#
+# @author  Björn Hempel  <bjoern@hempel.li>
+# @version 1.0 (2017-06-03)
+# ------------
+getTargetUriConfigName()
+{
+    local targetUriFileSystemSafe=$(getFileSystemSafeString "$2")
+
+    targetUriFileSystemSafe=$(echo "$targetUriFileSystemSafe" | sed 's@^file~-var-www-@@')
+    targetUriFileSystemSafe=$(echo "$targetUriFileSystemSafe" | sed 's~-web$~~')
+    targetUriFileSystemSafe=$(echo "$targetUriFileSystemSafe" | sed 's~-current$~~')
+    targetUriFileSystemSafe=$(echo "$targetUriFileSystemSafe" | sed 's~-html$~~')
+
+    echo "$1/$targetUriFileSystemSafe"
+}
+
+# ------------
 # Returns the content from a given file from line $lineFrom to the first match
 # string $matchString or until the end of the file.
 #
