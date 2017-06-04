@@ -6,25 +6,25 @@ An apache host viewer to list all provided host and vhosts on current system.
 
 ### A.1) installation
 
-This application uses the friends of bash libraries. Check that there are available:
+This application uses the friends of bash libraries (https://github.com/bjoern-hempel/friends-of-bash). Check that the libraries are available:
 
 ```
 user$ friends-of-bash --version
 friends-of-bash/v0.0.11
 ```
 
-If you don't have installed the friends of bash libraries, please do this first (https://github.com/bjoern-hempel/friends-of-bash). In short:
+If you can see a similar friends of bash version number like above, you can now install this application:
+
+```
+user$ sudo -E friends-of-bash install "git@github.com:bjoern-hempel/apache-host-viewer.git"
+```
+
+If you don't have installed the friends of bash libraries, please install them first. In short:
 
 ```
 user$ cd ~ && git clone git@github.com:bjoern-hempel/friends-of-bash.git && cd friends-of-bash
 user$ sudo -E bin/install
 user$ cd .. && rm -rf friends-of-bash
-```
-
-Now install this application:
-
-```
-user$ sudo -E friends-of-bash install "git@github.com:bjoern-hempel/apache-host-viewer.git"
 ```
 
 ## 1.) Usage
