@@ -33,6 +33,13 @@ while [[ $# > 0 ]]; do
             exit 0
             ;;
 
+        # help:  -v,    --version                 Shows the version number.
+        -v|--version)
+            version=$(getRepositoryVersion "$pathRoot")
+            echo "$version"
+            exit 0
+            ;;
+
         # help:
         # help:  -m,    --markdown                Shows the output as markdown and disable all other output types (json, html) - default output
         -m|--markdown)

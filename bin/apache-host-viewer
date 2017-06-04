@@ -34,23 +34,31 @@
 # makes the regexp search case insensitive
 shopt -s nocasematch
 
+# some configs
+       FRIENDS_OF_BASH_ROOT="/opt/friends-of-bash/friends-of-bash"
+FRIENDS_OF_BASH_SOURCE_FILE="$FRIENDS_OF_BASH_ROOT/lib/all"
+
+# include friends of bash
+source "$FRIENDS_OF_BASH_SOURCE_FILE"
+
 # config: max result
 maxResult=0
 
-# include the libraries
+# some calculable configs before
 if [ -h "${BASH_SOURCE[0]}" ]; then
-    filename=$(readlink "${BASH_SOURCE[0]}")
-    pathRoot=$(dirname "$filename")"/.."
+    realScriptname=$(readlink "${BASH_SOURCE[0]}")
+    pathRoot=$(dirname "$realScriptname")
+    scriptname="${BASH_SOURCE[0]}"
 else
-    pathRoot="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/.."
+    scriptname="$0"
+    pathRoot="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 fi
 
-# get the scriptname
-if [[ "${BASH_SOURCE[0]}" =~ "/usr/local/bin" ]]; then
-    scriptname=$(basename "${BASH_SOURCE[0]}")
-else
-    scriptname="${BASH_SOURCE[0]}"
-fi
+# translate /usr/local/bin script names
+[[ "$scriptname" =~ "/usr/local/bin" ]] && scriptname=$(basename "$scriptname")
+
+# because we are inside the bin folder
+pathRoot=$(dirname "$pathRoot")
 
 # include some libraries
 source "$pathRoot/lib/functions"
