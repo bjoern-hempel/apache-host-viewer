@@ -13,7 +13,7 @@ user$ friends-of-bash --version
 friends-of-bash/v0.0.11
 ```
 
-If you can see a similar friends of bash version number like above, you can now install this application:
+If you can see a similar friends of bash version output like above, you can now install this application:
 
 ```
 user$ sudo -E friends-of-bash install "git@github.com:bjoern-hempel/apache-host-viewer.git"
