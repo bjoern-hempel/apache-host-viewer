@@ -600,6 +600,7 @@ getMarkdownOfSystemAndDocumentRoots()
         local hdSizeStatus=$(getHdUsedPercentStatus)
         local unassignedDomainStatus=$(getUnassignedDomainStatus)
         local overallStatus=$(getOverallStatus "$loadAverageStatus" "$hdSizeStatus" "$unassignedDomainStatus")
+        local apps=$(friends-of-bash list)
 
         echo '## System status'
         echo
@@ -628,6 +629,16 @@ getMarkdownOfSystemAndDocumentRoots()
         echo '| php version | '$(getPhpVersion)' |'
         echo '| mysql version | '$(getMysqlVersion)' |'
         echo '| load average | '$(getLoadAverage1min)' '$(getLoadAverage5min)' '$(getLoadAverage15min)' |'
+        echo
+
+        echo '## Applications'
+        echo
+        while read line; do
+            name=$(echo "$line" | sed 's/ - \(.\)\+$//g')
+            version=$(echo "$line" | sed 's/^\(.\)\+ - //g')
+
+            echo "- $version"
+        done <<< "$apps"
         echo
 
         echo '## Users'
@@ -720,6 +731,7 @@ getJsonOfSystemAndDocumentRoots()
         local hdSizeStatus=$(getHdUsedPercentStatus)
         local unassignedDomainStatus=$(getUnassignedDomainStatus)
         local overallStatus=$(getOverallStatus "$loadAverageStatus" "$hdSizeStatus" "$unassignedDomainStatus")
+        local apps=$(friends-of-bash list)
 
         echo '    "created-at":                    "'$(date "+%Y-%m-%d %H:%M:%S")'",'
         echo '    "os-name-full":                  "'$(getOSName)'",'
@@ -733,6 +745,19 @@ getJsonOfSystemAndDocumentRoots()
         echo '    "updateable-application-number": "'$(getNumberOfInstallableApplications)'",'
         echo '    "php-version":                   "'$(getPhpVersion)'",'
         echo '    "mysql-version":                 "'$(getMysqlVersion)'",'
+        echo '    "applications":                  {'
+        local counter=0
+        while read line; do
+            local    name=$(echo "$line" | sed 's/ - \(.\)\+$//g')
+            local version=$(echo "$line" | sed 's/^\(.\)\+ - //g')
+            [ $counter -gt 0 ] && echo ","
+            echo '                                         "'$version'": {'
+            echo '                                             "updateable": "0"'
+            echo -n '                                         }'
+            ((counter++))
+        done <<< "$apps"
+        echo
+        echo '                                     },'
         echo '    "load-average":                  {'
         echo '                                         "1":                 "'$(getLoadAverage1min)'",'
         echo '                                         "5":                 "'$(getLoadAverage5min)'",'
