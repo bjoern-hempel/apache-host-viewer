@@ -6,20 +6,19 @@ An apache host viewer to list all provided host and vhosts on current system.
 
 ### A.1) installation
 
-First install the friends of bash libraries (https://github.com/bjoern-hempel/friends-of-bash). In short:
-
-```
-user$ cd ~
-user$ git clone git@github.com:bjoern-hempel/friends-of-bash.git && cd friends-of-bash
-user$ sudo -E bin/install
-user$ cd .. && rm -rf friends-of-bash
-```
-
-Check that the friends of bash libraries are available:
+This application uses the friends of bash libraries. Check that there are available:
 
 ```
 user$ friends-of-bash --version
 friends-of-bash/v0.0.11
+```
+
+If you don't have installed the friends of bash libraries, please do this first (https://github.com/bjoern-hempel/friends-of-bash). In short:
+
+```
+user$ cd ~ && git clone git@github.com:bjoern-hempel/friends-of-bash.git && cd friends-of-bash
+user$ sudo -E bin/install
+user$ cd .. && rm -rf friends-of-bash
 ```
 
 Now install this application:
