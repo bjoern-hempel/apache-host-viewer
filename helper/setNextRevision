@@ -1,0 +1,49 @@
+#!/bin/bash
+
+# makes the regexp search case insensitive
+shopt -s nocasematch
+
+# some configs
+       FRIENDS_OF_BASH_ROOT="/opt/friends-of-bash/friends-of-bash"
+FRIENDS_OF_BASH_SOURCE_FILE="$FRIENDS_OF_BASH_ROOT/lib/all"
+
+# include friends of bash
+source "$FRIENDS_OF_BASH_SOURCE_FILE"
+
+currentTag=$(getCurrentTagFromGivenPath "/opt/friends-of-bash/apache-host-viewer")
+   nextTag=$(getNextTagFromGivenPath "/opt/friends-of-bash/apache-host-viewer")
+
+
+while true; do
+    read -n 1 -p "This will set the current version number $currentTag to $nextTag. Do you want to continue? Type (y)es or (no): " yn
+    case $yn in
+        # yes
+        [Yy]*)
+            break
+            ;;
+        # no
+        [Nn]*)
+            echo
+            echo "The command was cancelled by user."
+            exit
+            ;;
+        # escape
+        $'\e')
+            echo
+            echo "The command was cancelled by user."
+            exit
+            ;;
+        # other character
+        *)
+            echo
+            ;;
+    esac
+done
+
+echo
+
+git tag -a $nextTag -m "version $nextTag"
+git push origin $nextTag
+
+echo "Done!"
+
