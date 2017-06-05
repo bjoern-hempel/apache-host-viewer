@@ -32,9 +32,9 @@ user$ cd .. && rm -rf friends-of-bash
 ### 1.1) Show the help dialog (`--help`)
 
 ```
-user$ ~/apache-host-viewer/bin/apache-host-viewer --help
+user$ apache-host-viewer --help
 
-Usage: bin/apache-host-viewer [options...]
+Usage: apache-host-viewer [options...]
  -h,    --help                    Shows this help.
 
  -m,    --markdown                Shows the output as markdown and disable all other output types (json, html) - default output
@@ -63,7 +63,7 @@ Usage: bin/apache-host-viewer [options...]
 The script uses the DUMP_VHOSTS function from `apachectl` (`apachectl -S`). This requires sudo credentials:
 
 ```
-user$ sudo ~/apache-host-viewer/bin/apache-host-viewer
+user$ sudo apache-host-viewer
 ```
 
 The markdown result could be:
@@ -115,7 +115,7 @@ The markdown result could be:
 The script uses the DUMP_VHOSTS function from `apachectl` (`apachectl -S`). This requires sudo credentials:
 
 ```
-user$ sudo ~/apache-host-viewer/bin/apache-host-viewer --html
+user$ sudo apache-host-viewer --html
 ```
 
 The markdown result could be:
@@ -209,7 +209,7 @@ The markdown result could be:
 The script uses the DUMP_VHOSTS function from `apachectl` (`apachectl -S`). This requires sudo credentials:
 
 ```
-user$ sudo ~/apache-host-viewer/bin/apache-host-viewer --json
+user$ sudo apache-host-viewer --json
 ```
 
 The markdown result could be:
@@ -271,7 +271,7 @@ The markdown result could be:
 The script uses the DUMP_VHOSTS function from `apachectl` (`apachectl -S`). This requires sudo credentials:
 
 ```
-user$ sudo ~/apache-host-viewer/bin/apache-host-viewer --show-system-info
+user$ sudo apache-host-viewer --show-system-info
 ```
 
 The markdown result could be:
@@ -347,7 +347,7 @@ You can use this parameter in combination with all other parameters (--markdown,
 The following command will create a markdown file (`index.md`) into the folder `/var/ww/html/server`. The following command also prints the markdown result on the screen:
 
 ```
-user$ sudo ~/apache-host-viewer/bin/apache-host-viewer --output-target=/var/www/html/server --output-name=index
+user$ sudo apache-host-viewer --output-target=/var/www/html/server --output-name=index
 ```
 
 ### 1.7) What's with json and html files? (`--create-json` and `--create-html`)
@@ -355,7 +355,7 @@ user$ sudo ~/apache-host-viewer/bin/apache-host-viewer --output-target=/var/www/
 Here it comes. It will also create a `index.html` and a `index.json` file into the folder `/var/ww/html/server`:
 
 ```
-user$ sudo ~/apache-host-viewer/bin/apache-host-viewer --output-target=/var/www/html/server --output-name=index --create-json --create-html
+user$ sudo apache-host-viewer --output-target=/var/www/html/server --output-name=index --create-json --create-html
 ```
 
 ### 1.8) Suppress the default output (`--silence`)
@@ -363,7 +363,7 @@ user$ sudo ~/apache-host-viewer/bin/apache-host-viewer --output-target=/var/www/
 You can suppress all outputs (except error messages) with the parameter `--silence`. This is usefull if you like to use this command as a cronjob task. The following command creates a md, a json and a html file into the folder `/var/www/html/server` and don't output any message to the command line:
 
 ```
-user$ sudo ~/apache-host-viewer/bin/apache-host-viewer --output-target=/var/www/html/server --output-name=index --show-system-info --show-links --create-json --create-html --silence
+user$ sudo apache-host-viewer --output-target=/var/www/html/server --output-name=index --show-system-info --show-links --create-json --create-html --silence
 ```
 
 ### 1.9) Check docker container instead of local system
