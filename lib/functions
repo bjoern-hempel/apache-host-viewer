@@ -631,15 +631,27 @@ getMarkdownOfSystemAndDocumentRoots()
         echo '| load average | '$(getLoadAverage1min)' '$(getLoadAverage5min)' '$(getLoadAverage15min)' |'
         echo
 
-        echo '## Applications'
-        echo
-        while read line; do
-            name=$(echo "$line" | sed 's/ - \(.\)\+$//g')
-            version=$(echo "$line" | sed 's/^\(.\)\+ - //g')
+        if ! applicationExists "jq"; then
+            >&2 echo "Application jq was not found. Please install it before with:"
+            >&2 echo "user$ sudo apt install jq"
+        else
+            echo '## Applications'
+            echo
+            while read line; do
+                local name=$(echo "$line" | sed 's/ - \(.\)\+$//g')
+                local version=$(echo "$line" | sed 's/^\(.\)\+ - //g')
 
-            echo "- $version"
-        done <<< "$apps"
-        echo
+                local updateAvailable=$(friends-of-bash updateAvailable "$name")
+
+                local updateText="The app is up to date."
+
+                [ "$updateAvailable" == "1" ] && updateText="There is an update available."
+
+                echo "- **$version**"
+                echo "  - Update: $updateText"
+            done <<< "$apps"
+            echo
+        fi
 
         echo '## Users'
         echo
@@ -748,11 +760,12 @@ getJsonOfSystemAndDocumentRoots()
         echo '    "applications":                  {'
         local counter=0
         while read line; do
-            local    name=$(echo "$line" | sed 's/ - \(.\)\+$//g')
-            local version=$(echo "$line" | sed 's/^\(.\)\+ - //g')
+            local            name=$(echo "$line" | sed 's/ - \(.\)\+$//g')
+            local         version=$(echo "$line" | sed 's/^\(.\)\+ - //g')
+            local updateAvailable=$(friends-of-bash updateAvailable "$name")
             [ $counter -gt 0 ] && echo ","
             echo '                                         "'$version'": {'
-            echo '                                             "updateable": "0"'
+            echo '                                             "updateable": "'$updateAvailable'"'
             echo -n '                                         }'
             ((counter++))
         done <<< "$apps"
