@@ -10,9 +10,24 @@ FRIENDS_OF_BASH_SOURCE_FILE="$FRIENDS_OF_BASH_ROOT/lib/all"
 # include friends of bash
 source "$FRIENDS_OF_BASH_SOURCE_FILE"
 
-currentTag=$(getCurrentTagFromGivenPath "/opt/friends-of-bash/apache-host-viewer")
-   nextTag=$(getNextTagFromGivenPath "/opt/friends-of-bash/apache-host-viewer")
+# some calculable configs before
+if [ -h "${BASH_SOURCE[0]}" ]; then
+    realScriptname=$(readlink "${BASH_SOURCE[0]}")
+    pathRoot=$(dirname "$realScriptname")
+    scriptname="${BASH_SOURCE[0]}"
+else
+    scriptname="$0"
+    pathRoot="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+fi
 
+# translate /usr/local/bin script names
+[[ "$scriptname" =~ "/usr/local/bin" ]] && scriptname=$(basename "$scriptname")
+
+# because we are inside the bin folder
+pathRoot=$(dirname "$pathRoot")
+
+currentTag=$(getCurrentTagFromGivenPath "$pathRoot")
+   nextTag=$(getNextTagFromGivenPath "$pathRoot")
 
 while true; do
     read -n 1 -p "This will set the current version number $currentTag to $nextTag. Do you want to continue? Type (y)es or (no): " yn
