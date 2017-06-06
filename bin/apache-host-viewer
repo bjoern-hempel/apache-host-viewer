@@ -190,8 +190,7 @@ if $PARSE_VHOSTS; then
 
         # add project name
         projectName=$(getProjectNameFromVirtualHost "$virtualHost")
-         lastStatus=$?
-        if [ $lastStatus -eq 0 ]; then
+        if [ $? -eq 0 ]; then
             if [ -z "${nameContainer[$targetUri]}" ]; then
                 nameContainer[$targetUri]="$projectName"
             fi
