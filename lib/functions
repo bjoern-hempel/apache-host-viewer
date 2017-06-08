@@ -604,12 +604,11 @@ getMarkdownOfSystemAndDocumentRoots()
 
         echo '## System status'
         echo
-        echo '| Name | Value |'
-        echo '| ---- | ----- |'
-        echo '| overall status | '$overallStatus' |'
-        echo '| load average status | '$loadAverageStatus' |'
-        echo '| disc size available status | '$hdSizeStatus' |'
-        echo '| unassigned domain status | '$unassignedDomainStatus' |'
+        echo '- **overall status:** '$overallStatus
+        echo '- **detailed:**'
+        echo '  - **load average status:** '$loadAverageStatus
+        echo '  - **disc size available status:** '$hdSizeStatus
+        echo '  - **unassigned domain status:** '$unassignedDomainStatus
         echo
 
         echo '## System informations'
@@ -777,10 +776,12 @@ getJsonOfSystemAndDocumentRoots()
         echo '                                         "15":                "'$(getLoadAverage15min)'"'
         echo '                                     },'
         echo '    "status":                        {'
-        echo '                                         "overall":           "'$overallStatus'",'
-        echo '                                         "load-average":      "'$loadAverageStatus'",'
-        echo '                                         "space-available":   "'$hdSizeStatus'",'
-        echo '                                         "unassigned-domain": "'$unassignedDomainStatus'"'
+        echo '                                         "overall":  "'$overallStatus'",'
+        echo '                                         "detailed": {'
+        echo '                                                         "load-average":      "'$loadAverageStatus'",'
+        echo '                                                         "space-available":   "'$hdSizeStatus'",'
+        echo '                                                         "unassigned-domain": "'$unassignedDomainStatus'"'
+        echo '                                                     }'
         echo '    },'
 
         local users=$(getUsers)
