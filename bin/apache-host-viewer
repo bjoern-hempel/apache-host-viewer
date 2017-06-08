@@ -240,6 +240,8 @@ if [ "$OUTPUT_TARGET" != "" ]; then
     # create json file
     if $CREATE_JSON; then
         jsonOutput=$(getJsonOfSystemAndDocumentRoots)
+        jsonOutput=$(compressJson "$jsonOutput")
+
         echo "$jsonOutput" > $jsonFile
     fi
 fi
