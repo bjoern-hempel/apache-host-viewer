@@ -744,7 +744,8 @@ getJsonOfSystemAndDocumentRoots()
         local overallStatus=$(getOverallStatus "$loadAverageStatus" "$hdSizeStatus" "$unassignedDomainStatus")
         local apps=$(friends-of-bash list)
 
-        echo '    "created-at":                    "'$(date "+%Y-%m-%d %H:%M:%S")'",'
+        echo '    "created-at-formated":           "'$(date "+%Y-%m-%d %H:%M:%S")'",'
+        echo '    "created-at":                    "'$(date "+%s")'",'
         echo '    "os-name-full":                  "'$(getOSName)'",'
         echo '    "hostname":                      "'$(hostname)'",'
         echo '    "number-of-cpus":                "'$(getNumberOfCpus)'",'
