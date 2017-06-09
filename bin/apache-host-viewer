@@ -214,9 +214,10 @@ fi
 
 # write markdown/json/html file
 if [ "$OUTPUT_TARGET" != "" ]; then
-    markdownFile="$OUTPUT_TARGET/$OUTPUT_NAME.$MARKDOWN_SUFFIX"
-    jsonFile="$OUTPUT_TARGET/$OUTPUT_NAME.$JSON_SUFFIX"
-    htmlFile="$OUTPUT_TARGET/$OUTPUT_NAME.$HTML_SUFFIX"
+          markdownFile="$OUTPUT_TARGET/$OUTPUT_NAME.$MARKDOWN_SUFFIX"
+              jsonFile="$OUTPUT_TARGET/$OUTPUT_NAME.$JSON_SUFFIX"
+              htmlFile="$OUTPUT_TARGET/$OUTPUT_NAME.$HTML_SUFFIX"
+    htmlFileIncomplete="$OUTPUT_TARGET/$OUTPUT_NAME-incomplete.$HTML_SUFFIX"
 
     # create md and/or html file
     if $CREATE_MARKDOWN || $CREATE_HTML; then
@@ -227,6 +228,7 @@ if [ "$OUTPUT_TARGET" != "" ]; then
         # create html from md file
         if $CREATE_HTML; then
             md2htmlFile "$markdownFile.~tmp" "$htmlFile"
+            md2htmlFile "$markdownFile.~tmp" "$htmlFileIncomplete" false
         fi
 
         # create md file

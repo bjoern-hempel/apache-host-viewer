@@ -859,6 +859,7 @@ md2html()
 {
     local  markdownContent="$1"
     local          cssFile="${2:-markdown.css}"
+    local     completeHtml=${3:-true}
     local       servername=$(hostname)
     local markdown2HtmlApp="markdown"
     local        tmpMdFile=$(mktemp)
@@ -917,9 +918,13 @@ EndOfMessage
     rm "$tmpMdFile"
 
     # write html index file
-    echo "$head"
+    if $completeHtml; then
+        echo "$head"
+    fi
     echo "$content"
-    echo "$footer"
+    if $completeHtml; then
+        echo "$footer"
+    fi
 
     # return 0
     return 0
@@ -935,6 +940,7 @@ md2htmlFile()
 {
     local markdownFile="$1"
     local    indexFile="$2"
+    local completeHtml=${3:-true}
     local   targetPath=$(dirname "$indexFile")
 
     local          cssFile="https://raw.githubusercontent.com/sindresorhus/github-markdown-css/gh-pages/github-markdown.css"
@@ -942,7 +948,7 @@ md2htmlFile()
     local      cssFullpath="$targetPath/$cssName"
 
     # download css file
-    if [ ! -f "$cssFile" ]; then
+    if [ ! -f "$cssFullpath" ]; then
         wget -O "$cssFullpath" --quiet "$cssFile"
     fi
 
@@ -954,7 +960,7 @@ md2htmlFile()
 
     # convert the markdown content into html content
     markdownContent=$(cat "$markdownFile")
-    htmlContent=$(md2html "$markdownContent" "$cssName")
+    htmlContent=$(md2html "$markdownContent" "$cssName" $completeHtml)
 
     # write html index file
     echo "$htmlContent" > $indexFile
