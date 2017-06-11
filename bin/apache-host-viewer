@@ -90,6 +90,9 @@ declare -A schemeHostsUnassignedContainer
 declare -A nameContainer
 declare -A pathContainer
 
+# collect ssl domains
+sslDomains=""
+
 if $PARSE_VHOSTS; then
     if [ "$DOCKER_NAME" == "" ] && ! applicationExists apachectl; then
         echo 'It seems that the apache is not installed on this system. Do this before continue.' && exit
@@ -164,6 +167,7 @@ if $PARSE_VHOSTS; then
         # add protocol to domain
         if [ $port -eq 443 ]; then
             domain="https://$domain"
+            [ "$sslDomains" == "" ] && sslDomains="$domain" || sslDomains="$sslDomains"$'\n'"$domain"
         else
             domain="http://$domain"
         fi
@@ -211,6 +215,12 @@ if $PARSE_VHOSTS; then
         [ ! -f "$domainFirstSeenAtPath"    ] && echo "$scriptStartTime" > "$domainFirstSeenAtPath"
     done
 fi
+
+# sort domains and remove duplicates
+for target in "${!schemeHostsContainer[@]}"; do
+              schemeHostsContainer[$target]=$(sortDomainList "${schemeHostsContainer[$target]}")
+    schemeHostsUnassignedContainer[$target]=$(sortDomainList "${schemeHostsUnassignedContainer[$target]}")
+done
 
 # write markdown/json/html file
 if [ "$OUTPUT_TARGET" != "" ]; then
