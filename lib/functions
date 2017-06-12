@@ -760,7 +760,7 @@ getJsonOfSystemAndDocumentRoots()
         local loadAverageStatus=$(getLoadAverageStatus)
         local hdSizeStatus=$(getHdUsedPercentStatus)
         local unassignedDomainStatus=$(getUnassignedDomainStatus)
-        local overallStatus=$(getOverallStatus "$loadAverageStatus" "$hdSizeStatus" "$unassignedDomainStatus")
+        local overallStatus=$(getOverallStatus "$loadAverageStatus" "$hdSizeStatus" "$unassignedDomainStatus" "$sslOverallStatus")
         local apps=$(friends-of-bash list)
 
         echo '    "created-at-formated":           "'$(date "+%Y-%m-%d %H:%M:%S")'",'
@@ -800,7 +800,8 @@ getJsonOfSystemAndDocumentRoots()
         echo '                                         "detailed": {'
         echo '                                                         "load-average":      "'$loadAverageStatus'",'
         echo '                                                         "space-available":   "'$hdSizeStatus'",'
-        echo '                                                         "unassigned-domain": "'$unassignedDomainStatus'"'
+        echo '                                                         "unassigned-domain": "'$unassignedDomainStatus'",'
+        echo '                                                         "ssl-certificate":   "'$sslOverallStatus'"'
         echo '                                                     }'
         echo '    },'
 
@@ -851,7 +852,32 @@ getJsonOfSystemAndDocumentRoots()
         ((counter++))
     done
     echo
-    echo '                                     ]'
+    echo '                                     ],'
+
+    echo '    "ssl-certificates":              {'
+    local counter=0
+    echo "$sslDomains" | while read domain; do
+        [ $counter -gt 0 ] && echo ","
+        echo    "                                         \"$domain\": {"
+        echo    "                                             \"issuer\": \"${sslIssuer[$domain]}\","
+        echo    "                                             \"valid-days\": \"${sslValidDays[$domain]}\","
+        echo    "                                             \"valid-until\": \"${sslValidUntil[$domain]}\","
+        echo    "                                             \"status\": {"
+        echo    "                                                 \"overall\": \"${sslStatus[$domain]}\","
+        echo    "                                                 \"detailed\": {"
+        echo    "                                                     \"certificate\": \"${sslCertificateVerifiedStatus[$domain]}\","
+        echo    "                                                     \"chain-certificate\": \"${sslChainCertificateVerifiedStatus[$domain]}\","
+        echo    "                                                     \"valid\": \"${sslCertificateValidStatus[$domain]}\","
+        echo    "                                                     \"domain-from-certificate\": \"${sslDomainFromCertificateStatus[$domain]}\","
+        echo    "                                                     \"status-ocsp\": \"${sslStatusOcspOkStatus[$domain]}\""
+        echo    "                                                 }"
+        echo    "                                             }"
+        echo -n "                                         }"
+        ((counter++))
+    done
+    echo
+    echo '                                     }'
+
     echo '}'
 }
 
