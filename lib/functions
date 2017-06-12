@@ -722,15 +722,17 @@ getMarkdownOfSystemAndDocumentRoots()
         echo
         echo "$sslDomains" | while read domain; do
             echo "- $domain"
-            echo "  - sslStatus: ${sslStatus[$domain]}"
-            echo "  - sslCertificateStatus: ${sslCertificateVerifiedStatus[$domain]}"
-            echo "  - sslChainCertificateStatus: ${sslChainCertificateVerifiedStatus[$domain]}"
-            echo "  - sslIssuer: ${sslIssuer[$domain]}"
-            echo "  - sslCertificateValidStatus: ${sslCertificateValidStatus[$domain]}"
-            echo "  - sslValidDays: ${sslValidDays[$domain]}"
-            echo "  - sslValidUntil: ${sslValidUntil[$domain]}"
-            echo "  - sslDomainFromCertificateStatus: ${sslDomainFromCertificateStatus[$domain]}"
-            echo "  - sslStatusOcspOkStatus: ${sslStatusOcspOkStatus[$domain]}"
+            echo "  - issuer: ${sslIssuer[$domain]}"
+            echo "  - validDays: ${sslValidDays[$domain]}"
+            echo "  - validUntil: ${sslValidUntil[$domain]}"
+            echo "  - status:"
+            echo "    - overall: ${sslStatus[$domain]}"
+            echo "    - detailed:"
+            echo "      - certificateStatus: ${sslCertificateVerifiedStatus[$domain]}"
+            echo "      - chainCertificateStatus: ${sslChainCertificateVerifiedStatus[$domain]}"
+            echo "      - certificateValidStatus: ${sslCertificateValidStatus[$domain]}"
+            echo "      - domainFromCertificateStatus: ${sslDomainFromCertificateStatus[$domain]}"
+            echo "      - statusOcspOkStatus: ${sslStatusOcspOkStatus[$domain]}"
         done
         echo
     fi
