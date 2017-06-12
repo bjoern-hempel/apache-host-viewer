@@ -89,9 +89,19 @@ declare -A schemeHostsContainer
 declare -A schemeHostsUnassignedContainer
 declare -A nameContainer
 declare -A pathContainer
+declare -A sslStatus
+declare -A sslCertificateVerifiedStatus
+declare -A sslChainCertificateVerifiedStatus
+declare -A sslIssuer
+declare -A sslCertificateValidStatus
+declare -A sslValidDays
+declare -A sslValidUntil
+declare -A sslDomainFromCertificateStatus
+declare -A sslStatusOcspOkStatus
 
 # collect ssl domains
 sslDomains=""
+sslOverallStatus="ok"
 
 if $PARSE_VHOSTS; then
     if [ "$DOCKER_NAME" == "" ] && ! applicationExists apachectl; then
@@ -166,8 +176,8 @@ if $PARSE_VHOSTS; then
 
         # add protocol to domain
         if [ $port -eq 443 ]; then
-            domain="https://$domain"
             [ "$sslDomains" == "" ] && sslDomains="$domain" || sslDomains="$sslDomains"$'\n'"$domain"
+            domain="https://$domain"
         else
             domain="http://$domain"
         fi
@@ -220,6 +230,82 @@ fi
 for target in "${!schemeHostsContainer[@]}"; do
               schemeHostsContainer[$target]=$(sortDomainList "${schemeHostsContainer[$target]}")
     schemeHostsUnassignedContainer[$target]=$(sortDomainList "${schemeHostsUnassignedContainer[$target]}")
+done
+
+# check ssl certificates
+IFS=$'\n'
+for domain in $sslDomains; do
+                            sslStatus[$domain]="ok"
+         sslCertificateVerifiedStatus[$domain]="critical"
+    sslChainCertificateVerifiedStatus[$domain]="critical"
+            sslCertificateValidStatus[$domain]="critical"
+                         sslValidDays[$domain]=0
+                        sslValidUntil[$domain]=
+       sslDomainFromCertificateStatus[$domain]="critical"
+                sslStatusOcspOkStatus[$domain]="critical"
+
+    certFile="/tmp/$domain.crt"
+    chainfile="/tmp/$domain.ca"
+
+    # get and save domain cert
+    cert=$(getDomainCert "$domain")
+    echo "$cert" > "$certFile"
+
+    # get the issuer from domain cert
+    issuer=$(getIssuer "$domain")
+    sslIssuer[$domain]="$issuer"
+
+    # get and save the issuer certificate
+    certChain=$(getChainCertificate "$domain")
+
+    # no chain certificate returned
+    if [ "$certChain" == "" ]; then
+        sslOverallStatus="critical"
+        sslStatus[$domain]="critical"
+        continue
+    fi
+
+    # save chain file
+    echo "$certChain" > "$chainfile"
+
+    # check the certificate
+    if ! isCertificateVerified "$certFile" "$chainfile" "$domain"; then
+        sslOverallStatus="critical"
+        sslStatus[$domain]="critical"
+    else
+        sslCertificateVerifiedStatus[$domain]="ok"
+    fi
+
+    # check the chain certificate
+    if ! isChainCertificateVerified "$chainfile" "$issuer" "$domain"; then
+        sslOverallStatus="critical"
+        sslStatus[$domain]="critical"
+    else
+        sslChainCertificateVerifiedStatus[$domain]="ok"
+    fi
+
+    # check the valid days
+                 sslValidDays[$domain]=$(getCertificateValidDays "$certFile")
+                sslValidUntil[$domain]=$(getValidUntilFromCertificate "$certFile" true)
+    sslCertificateValidStatus[$domain]=$(getCertificateValidStatus "$certFile")
+
+    sslStatus[$domain]=${sslCertificateValidStatus[$domain]}
+
+    # check that the given domain name matches with the certification domain name
+    if ! isDomainFromCertificate "$domain" "$certFile"; then
+        sslOverallStatus="critical"
+        sslStatus[$domain]="critical"
+    else
+        sslDomainFromCertificateStatus[$domain]="ok"
+    fi
+
+    # gets the ocsp status
+    if ! isStatusOcspOk "$domain" "$chainfile" "$certFile"; then
+        sslStatus[$domain]=$(getOverallStatus "${sslStatus[$domain]}" "warn")
+        sslOverallStatus=$(getOverallStatus "$sslOverallStatus" "${sslStatus[$domain]}" "warn")
+    else
+        sslStatusOcspOkStatus[$domain]="ok"
+    fi
 done
 
 # write markdown/json/html file

@@ -599,7 +599,7 @@ getMarkdownOfSystemAndDocumentRoots()
         local loadAverageStatus=$(getLoadAverageStatus)
         local hdSizeStatus=$(getHdUsedPercentStatus)
         local unassignedDomainStatus=$(getUnassignedDomainStatus)
-        local overallStatus=$(getOverallStatus "$loadAverageStatus" "$hdSizeStatus" "$unassignedDomainStatus")
+        local overallStatus=$(getOverallStatus "$loadAverageStatus" "$hdSizeStatus" "$unassignedDomainStatus" "$sslOverallStatus")
         local apps=$(friends-of-bash list)
 
         echo '## System status'
@@ -609,6 +609,7 @@ getMarkdownOfSystemAndDocumentRoots()
         echo '  - **load average status:** '$loadAverageStatus
         echo '  - **disc size available status:** '$hdSizeStatus
         echo '  - **unassigned domain status:** '$unassignedDomainStatus
+        echo '  - **ssl certificate status:** '$sslOverallStatus
         echo
 
         echo '## System informations'
@@ -715,6 +716,24 @@ getMarkdownOfSystemAndDocumentRoots()
         echo "  - apache config: ${pathContainer[$target]}"
     done
     echo
+
+    if $SHOW_SSL_CERTIFICATES; then
+        echo '## SSL Certificates'
+        echo
+        echo "$sslDomains" | while read domain; do
+            echo "- $domain"
+            echo "  - sslStatus: ${sslStatus[$domain]}"
+            echo "  - sslCertificateStatus: ${sslCertificateVerifiedStatus[$domain]}"
+            echo "  - sslChainCertificateStatus: ${sslChainCertificateVerifiedStatus[$domain]}"
+            echo "  - sslIssuer: ${sslIssuer[$domain]}"
+            echo "  - sslCertificateValidStatus: ${sslCertificateValidStatus[$domain]}"
+            echo "  - sslValidDays: ${sslValidDays[$domain]}"
+            echo "  - sslValidUntil: ${sslValidUntil[$domain]}"
+            echo "  - sslDomainFromCertificateStatus: ${sslDomainFromCertificateStatus[$domain]}"
+            echo "  - sslStatusOcspOkStatus: ${sslStatusOcspOkStatus[$domain]}"
+        done
+        echo
+    fi
 
     if $SHOW_LINKS; then
         echo '## Links'
