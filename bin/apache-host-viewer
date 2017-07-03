@@ -232,6 +232,23 @@ for target in "${!schemeHostsContainer[@]}"; do
     schemeHostsUnassignedContainer[$target]=$(sortDomainList "${schemeHostsUnassignedContainer[$target]}")
 done
 
+# only list domains
+if $ONLY_LIST_DOMAINS; then
+    for targetUri in "${!schemeHostsContainer[@]}"; do
+        domains="${schemeHostsContainer[$targetUri]}"
+
+        echo $targetUri
+
+        while read -r domain; do
+            echo "- $domain"
+        done <<< "$domains"
+
+        echo ""
+    done
+
+    exit
+fi
+
 # check ssl certificates
 IFS=$'\n'
 for domain in $sslDomains; do

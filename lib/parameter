@@ -22,6 +22,7 @@ MARKDOWN_SUFFIX="md"
 JSON_SUFFIX="json"
 HTML_SUFFIX="html"
 SILENCE=false
+ONLY_LIST_DOMAINS=false
 
 # read arguments
 # help:
@@ -39,6 +40,12 @@ while [[ $# > 0 ]]; do
             version=$(getRepositoryVersion "$pathRoot")
             echo "$version"
             exit 0
+            ;;
+
+        # help:
+        # help:  -l,    --only-list-domains       Only list the domains, that are available on this system.
+        -l|--only-list-domains)
+            ONLY_LIST_DOMAINS=true
             ;;
 
         # help:
