@@ -30,6 +30,9 @@
 # @copyright Written by Björn Hempel <bjoern@hempel.li>.
 # ------------
 
+# some needed applications
+applications=(curl)
+
 # makes the regexp search case insensitive
 shopt -s nocasematch
 
@@ -73,6 +76,16 @@ if [[ $userId -ne 0 ]]; then
     echo "sudo $0 ..."
     exit 1
 fi
+
+# check applications
+for application in "${applications[@]}"; do
+    which $application >/dev/null
+
+    if [ "$?" -gt "0" ]; then
+        echo "Application \"$application\" is not installed. Please install it before continuing. Abort.."
+        exit
+    fi
+done
 
 # load configurations and do some preparations
 source "$pathRoot/config/paths"
