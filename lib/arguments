@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# author settings
+AUTHOR="Björn Hempel"
+EMAIL="bjoern@hempel.li"
+
 # declare parameter list array
 PARAMETERS=()
 
@@ -26,12 +30,22 @@ ONLY_LIST_DOMAINS=false
 
 # read arguments
 # help:
+# help: An apache host viewer (%version%) by %author% <%email%>.
+# help:
 # help: Usage: %scriptname% [options...]
 while [[ $# > 0 ]]; do
     case "$1" in
         # help:  -h,    --help                    Shows this help.
         -h|--help)
-            cat "$pathRoot/lib/parameter" | grep "# help:" | grep -v 'cat parameter' | sed 's/[ ]*# help:[ ]\?//g' | sed "s~%scriptname%~$scriptname~g"
+            version=$(getRepositoryVersion "$pathRoot" true)
+            cat "$BASH_SOURCE" | \
+                grep "# help:" | \
+                grep -v 'cat parameter' | \
+                sed 's/[ ]*# help:[ ]\?//g' | \
+                sed "s~%scriptname%~$scriptname~g" | \
+                sed "s~%version%~$version~g" | \
+                sed "s~%author%~$AUTHOR~g" | \
+                sed "s~%email%~$EMAIL~g"
             exit 0
             ;;
 
