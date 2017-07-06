@@ -355,7 +355,7 @@ if [ "$OUTPUT_TARGET" != "" ]; then
 
     # create md and/or html file
     if $CREATE_MARKDOWN || $CREATE_HTML; then
-        markdownOutput=$(getMarkdownOfSystemAndDocumentRoots)
+        markdownOutput=$(getMarkdownOfSystemAndDocumentRoots "$pathRoot")
 
         echo "$markdownOutput" > "$markdownFile.~tmp"
 
@@ -375,7 +375,7 @@ if [ "$OUTPUT_TARGET" != "" ]; then
 
     # create json file
     if $CREATE_JSON; then
-        jsonOutput=$(getJsonOfSystemAndDocumentRoots)
+        jsonOutput=$(getJsonOfSystemAndDocumentRoots "$pathRoot")
         jsonOutput=$(compressJson "$jsonOutput")
 
         echo "$jsonOutput" > $jsonFile
@@ -384,13 +384,13 @@ fi
 
 # markdown output
 if ! $SILENCE && $MARKDOWN_OUTPUT; then
-    markdownOutput=$(getMarkdownOfSystemAndDocumentRoots)
+    markdownOutput=$(getMarkdownOfSystemAndDocumentRoots "$pathRoot")
     echo "$markdownOutput"
 fi
 
 # json output
 if ! $SILENCE && $JSON_OUTPUT; then
-    jsonOutput=$(getJsonOfSystemAndDocumentRoots)
+    jsonOutput=$(getJsonOfSystemAndDocumentRoots "$pathRoot")
 
     if $COMPRESS_JSON; then
         jsonOutput=$(compressJson "$jsonOutput")
@@ -400,7 +400,7 @@ if ! $SILENCE && $JSON_OUTPUT; then
 fi
 
 if ! $SILENCE && $HTML_OUTPUT; then
-    markdownOutput=$(getMarkdownOfSystemAndDocumentRoots)
+    markdownOutput=$(getMarkdownOfSystemAndDocumentRoots "$pathRoot")
 
     htmlOutput=$(md2html "$markdownOutput")
 

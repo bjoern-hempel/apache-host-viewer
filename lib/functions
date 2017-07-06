@@ -271,6 +271,8 @@ getIpFromDomain()
 # ------------
 getMarkdownOfSystemAndDocumentRoots()
 {
+    local pathRoot="$1"
+
     echo '# Host "'$(hostname)'"'
     echo
 
@@ -280,6 +282,7 @@ getMarkdownOfSystemAndDocumentRoots()
         local unassignedDomainStatus=$(getUnassignedDomainStatus)
         local overallStatus=$(getOverallStatus "$loadAverageStatus" "$hdSizeStatus" "$unassignedDomainStatus" "$sslOverallStatus")
         local apps=$(friends-of-bash list)
+        local version=$(getRepositoryVersion "$pathRoot")
 
         echo '## System status'
         echo
@@ -296,6 +299,7 @@ getMarkdownOfSystemAndDocumentRoots()
         echo '| Name | Value |'
         echo '| ---- | ----- |'
         echo '| document created at | '$(date "+%Y-%m-%d %H:%M:%S")' |'
+        echo '| document created by | '$version' |'
         echo '| full os name | '$(getOSName)' |'
         echo '| hostname | '$(hostname)' |'
         echo '| number of cpus | '$(getNumberOfCpus)' |'
@@ -435,6 +439,8 @@ getMarkdownOfSystemAndDocumentRoots()
 # ------------
 getJsonOfSystemAndDocumentRoots()
 {
+    local pathRoot="$1"
+
     echo '{'
 
     if $SHOW_SYSTEM_INFORMATIONS; then
@@ -442,10 +448,12 @@ getJsonOfSystemAndDocumentRoots()
         local hdSizeStatus=$(getHdUsedPercentStatus)
         local unassignedDomainStatus=$(getUnassignedDomainStatus)
         local overallStatus=$(getOverallStatus "$loadAverageStatus" "$hdSizeStatus" "$unassignedDomainStatus" "$sslOverallStatus")
+        local version=$(getRepositoryVersion "$pathRoot")
         local apps=$(friends-of-bash list)
 
         echo '    "created-at-formated":           "'$(date "+%Y-%m-%d %H:%M:%S")'",'
         echo '    "created-at":                    "'$(date "+%s")'",'
+        echo '    "created-by":                    "'$version'",'
         echo '    "os-name-full":                  "'$(getOSName)'",'
         echo '    "hostname":                      "'$(hostname)'",'
         echo '    "number-of-cpus":                "'$(getNumberOfCpus)'",'
