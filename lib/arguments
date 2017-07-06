@@ -38,10 +38,7 @@ while [[ $# > 0 ]]; do
         # help:  -h,    --help                    Shows this help.
         -h|--help)
             version=$(getRepositoryVersion "$pathRoot" true)
-            cat "$BASH_SOURCE" | \
-                grep "# help:" | \
-                grep -v 'cat parameter' | \
-                sed 's/[ ]*# help:[ ]\?//g' | \
+            cat "$BASH_SOURCE" | grep "# help:" | grep -v 'cat parameter' | sed 's/[ ]*# help:[ ]\?//g' | \
                 sed "s~%scriptname%~$scriptname~g" | \
                 sed "s~%version%~$version~g" | \
                 sed "s~%author%~$AUTHOR~g" | \
