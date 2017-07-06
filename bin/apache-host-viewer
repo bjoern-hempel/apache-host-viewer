@@ -1,5 +1,6 @@
 #!/bin/bash
 
+# ------------
 # An apache host viewer to list all provided host and vhosts on current system.
 #
 # @author    Björn Hempel <bjoern@hempel.li>
@@ -66,6 +67,14 @@ pathRoot=$(dirname "$pathRoot")
 source "$pathRoot/lib/functions"
 source "$pathRoot/lib/arguments"
 
+# check installed friends of library apps
+message=$(checkCurrentVersionNumbers "$pathRoot/.require")
+lastStatus=$?
+if [ $lastStatus -gt 0 ]; then
+    echo "$message Abort.."
+    exit 1
+fi
+
 # check the current used user
 userId=$(id -u)
 
@@ -82,7 +91,7 @@ for application in "${applications[@]}"; do
 
     if [ "$?" -gt "0" ]; then
         echo "Application \"$application\" is not installed. Please install it before continuing. Abort.."
-        exit
+        exit 1
     fi
 done
 
