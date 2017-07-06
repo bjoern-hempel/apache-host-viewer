@@ -1,17 +1,6 @@
 #!/bin/bash
 
 # ------------
-# Check if a given application exists.
-#
-# @author  Björn Hempel  <bjoern@hempel.li>
-# @version 1.0 (2017-05-12)
-# ------------
-applicationExists()
-{
-    `which $1 >/dev/null`
-}
-
-# ------------
 # Returns a file system safe string.
 #
 # @author  Björn Hempel  <bjoern@hempel.li>
@@ -40,212 +29,6 @@ getTargetUriConfigName()
     targetUriFileSystemSafe=$(echo "$targetUriFileSystemSafe" | sed 's~-html$~~')
 
     echo "$1/$targetUriFileSystemSafe"
-}
-
-# ------------
-# Returns the content from a given file from line $lineFrom to the first match
-# string $matchString or until the end of the file.
-#
-# @author  Björn Hempel <bjoern@hempel.li>
-# @version 1.0 (2017-05-12)
-# ------------
-getContentFromLineToMatch()
-{
-    local        file="$1"
-    local    lineFrom=$2
-    local matchString="$3"
-    local  dockerName="$4"
-
-    # check if file exists
-    if ! fileExistsLocallyOrOnDocker "$file" "$dockerName"; then
-        echo -n "" && return 1
-    fi
-
-    # helper variables
-    local         lines=0
-    local         found=false
-    local    serverRoot='/etc/apache2'
-    local possibleLines=$(executeLocallyOrOnDocker "cat \"$file\" | tail -n+$lineFrom" "$dockerName")
-
-    possibleLines=$(echo "$possibleLines" | wc -l)
-
-    # try to catch the comment as well
-    while [ $lineFrom -gt 1 ]; do
-        local currentLine=$(tail -n+$((lineFrom-1)) "$file" | head -n1)
-
-        # we want this line (empty lines or commented out lines)
-        if [[ "$currentLine" =~ ^([[:space:]])*$ ]] || [[ "$currentLine" =~ ^([[:space:]])*# ]]; then
-            ((lineFrom--))
-            ((lines++))
-            ((possibleLines++))
-        else
-            break;
-        fi
-    done
-
-    # try to find the end tag of VirtualHost (</VirtualHost>)
-    if [ $possibleLines -gt 0 ]; then
-        while ! $found; do
-            ((lines++))
-
-            if [ "$dockerName" != "" ]; then
-                local content=$(docker exec -it $dockerName cat "$file" | tail -n+$lineFrom | head -n$lines)
-            else
-                local content=$(tail -n+$lineFrom "$file" | head -n$lines)
-            fi
-
-            # $matchString found -> stop here
-            [[ "$content" =~ "$matchString" ]] && found=true
-
-            # end of file reached
-            [ $lines -ge $possibleLines ] && found=true
-        done
-    fi
-
-    echo "$content" && return 0
-}
-
-# ------------
-# Tries to extract the complete virtual host block
-# in given file $file on line $lineFrom. The function
-# also replaces include commands with the content of
-# the that include file. Relative include paths will
-# be extended with given $serverRoot path.
-#
-# @author  Björn Hempel <bjoern@hempel.li>
-# @version 1.0 (2017-05-12)
-# ------------
-getVirtualHost()
-{
-    shopt -s nocasematch
-
-    local        file="$1"
-    local    lineFrom=$2
-    local matchString='</VirtualHost>'
-    local  serverRoot="$3"
-    local  dockerName="$4"
-
-    local content=$(getContentFromLineToMatch "$file" $lineFrom "$matchString" "$dockerName")
-    local lastStatus=$?
-
-    # no content found
-    if [ $lastStatus -gt 0 ]; then
-        echo -n "" && return $lastStatus
-    fi
-
-    # replace all "include paths"
-    while [[ "$content" =~ (^|$'\n')([[:space:]]*)(include[[:space:]]+)([a-z0-9_/.-]+) ]]; do
-        local fullstring="${BASH_REMATCH[3]}${BASH_REMATCH[4]}"
-        local includePath="$serverRoot/${BASH_REMATCH[4]}"
-
-        if [ "$dockerName" != "" ]; then
-            local includeContent=$(docker exec -it $dockerName cat "$includePath")
-        else
-            local includeContent=$(cat "$includePath")
-        fi
-
-        content=$(echo "${content//$fullstring/$includeContent}")
-    done
-
-    echo "$content"
-    return 0
-}
-
-# ------------
-# Tries to extracts the target (document root, proxy target, redirect, etc)
-# from given virtual config block in given $file on line $lineFrom.
-#
-# @author  Björn Hempel <bjoern@hempel.li>
-# @version 1.0 (2017-05-23)
-# ------------
-getTargetFromVirtualHostFile()
-{
-    shopt -s nocasematch
-
-    local       file="$1"
-    local   lineFrom=$2
-    local serverRoot="$3"
-    local dockerName="$4"
-
-    local virtualHost=$(getVirtualHost "$file" $lineFrom "$serverRoot" "$dockerName")
-
-    getTargetFromVirtualHost "$virtualHost"
-
-    local lastStatus=$?
-
-    return $lastStatus
-}
-
-# ------------
-# Tries to extracts the target (document root, proxy target, redirect, etc)
-# from the given virtual host block.
-#
-# @author  Björn Hempel <bjoern@hempel.li>
-# @version 1.0 (2017-05-23)
-# ------------
-getTargetFromVirtualHost()
-{
-    shopt -s nocasematch
-
-    local virtualHost="$1"
-
-    local documentRoot=$(echo "$virtualHost" | grep -i "DocumentRoot" | head -n 1)
-    local proxyPass=$(echo "$virtualHost" | grep -i "ProxyPass[ $'\t']" | head -n 1)
-    local rewriteRule=$(echo "$virtualHost" | grep -i "RewriteRule" | grep 301 | head -n 1)
-
-    if [ "$documentRoot" != "" ]; then
-        if [[ "$documentRoot" =~ ([\t ]*DocumentRoot[\t ]+)([a-z0-9/.-]+) ]]; then
-            echo "file://${BASH_REMATCH[2]}"
-            return 0
-        else
-            return 1
-        fi
-    fi
-
-    if [ "$proxyPass" != "" ]; then
-        if [[ "$proxyPass" =~ ([\t ]*ProxyPass[\t ]+[a-z0-9/.-]+[\t ]+)([a-z0-9/.:-]+) ]]; then
-            echo "${BASH_REMATCH[2]}"
-            return 0
-        else
-            return 1
-        fi
-    fi
-
-    if [ "$rewriteRule" != "" ]; then
-        local uri=$(echo "$rewriteRule" | awk '{print $3}')
-
-        if [ "$uri" != "" ]; then
-            echo "$uri"
-            return 0
-        else
-            return 1
-        fi
-    fi
-
-    return 1
-}
-
-# ------------
-# Tries to get the name from the project.
-#
-# @author  Björn Hempel <bjoern@hempel.li>
-# @version 1.0 (2017-05-29)
-# ------------
-getProjectNameFromVirtualHost()
-{
-    shopt -s nocasematch
-
-    local virtualHost="$1"
-    local nameName="name"
-
-    local name=$(echo "$virtualHost" | grep "^#\([[:space:]]\)\+name:" | head -n1 | sed "s/^#[ ]\+name:[ ]\+//i")
-
-    if [ "$name" == "" ]; then
-        return 1
-    fi
-
-    echo "$name"
-    return 0
 }
 
 # ------------
@@ -926,7 +709,7 @@ md2html()
 <!DOCTYPE html>
 <html lang="en">
     <head>
-        <!--[if IE]>                                                                                                                                                   
+        <!--[if IE]>
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
         <![endif]-->
         <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -1155,15 +938,5 @@ analyzeProject()
     cd "$startPath"
 
     return 0
-}
-
-# ------------
-# check if a given application exists
-#
-# @author  Björn Hempel
-# @version 1.0
-# ------------
-applicationExists() {
-  `which $1 >/dev/null`
 }
 

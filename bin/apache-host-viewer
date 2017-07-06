@@ -64,7 +64,6 @@ pathRoot=$(dirname "$pathRoot")
 
 # include some libraries
 source "$pathRoot/lib/functions"
-source "$pathRoot/lib/docker"
 source "$pathRoot/lib/arguments"
 
 # check the current used user
