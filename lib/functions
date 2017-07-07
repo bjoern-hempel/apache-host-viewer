@@ -327,8 +327,9 @@ getMarkdownOfSystemAndDocumentRoots()
                 local updateAvailable=$(friends-of-bash updateAvailable "$name")
 
                 local updateText="The app is up to date."
+                local remoteVersion=$(friends-of-bash version "$name" -r -s)
 
-                [ "$updateAvailable" == "1" ] && updateText="There is an update available."
+                [ "$updateAvailable" == "1" ] && updateText="There is an update available ($remoteVersion)."
 
                 echo "- **$version**"
                 echo "  - Update: $updateText"
