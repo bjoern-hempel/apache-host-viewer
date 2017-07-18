@@ -421,6 +421,22 @@ getMarkdownOfSystemAndDocumentRoots()
         echo
     fi
 
+    if $SHOW_DOMAIN_LIST; then
+        echo '## Domain list'
+        echo
+        for domain in "${!domainList[@]}"; do
+            local targetUri="${domainList[$domain]}"
+            echo    "- $domain"
+            echo    "  - targetUri: $targetUri"
+            echo -n "  - assigned: "
+            if ${domainListAssignedStatus[$domain]}; then
+                echo "true"
+            else
+                echo "false"
+            fi
+        done
+    fi
+
     if $SHOW_LINKS; then
         echo '## Links'
         echo
@@ -544,6 +560,7 @@ getJsonOfSystemAndDocumentRoots()
     echo
     echo '                                     ],'
 
+    # echo certificate list
     echo '    "ssl-certificates":              {'
     local counter=0
     echo "$sslDomains" | while read domain; do
@@ -566,6 +583,25 @@ getJsonOfSystemAndDocumentRoots()
         ((counter++))
     done
     echo
+    echo '                                     },'
+
+    # print domain list
+    echo '    "domains":                       {'
+    local counter=0
+    for domain in "${!domainList[@]}"; do
+        local targetUri="${domainList[$domain]}"
+        [ $counter -gt 0 ] && echo ","
+        echo    "                                         \"$domain\": {"
+        echo    "                                             \"target-uri\": \"$targetUri\","
+        echo -n "                                             \"assigned\": "
+        if ${domainListAssignedStatus[$domain]}; then
+            echo "true"
+        else
+            echo "false"
+        fi
+        echo    "                                         }"
+        ((counter++))
+    done
     echo '                                     }'
 
     echo '}'

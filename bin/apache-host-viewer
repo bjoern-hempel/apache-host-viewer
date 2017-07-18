@@ -110,6 +110,8 @@ declare -A schemeHostsContainer
 declare -A schemeHostsUnassignedContainer
 declare -A nameContainer
 declare -A pathContainer
+declare -A domainList
+declare -A domainListAssignedStatus
 declare -A sslStatus
 declare -A sslCertificateVerifiedStatus
 declare -A sslChainCertificateVerifiedStatus
@@ -183,6 +185,9 @@ if $PARSE_VHOSTS; then
             continue
         fi
 
+        # get ip from the given domain
+        ipDomain=$(getIpFromDomain "$domain")
+
         # translate domain
         if [[ "$domain" =~ xn-- ]]; then
             # check that idn is installed
@@ -193,6 +198,14 @@ if $PARSE_VHOSTS; then
             fi
 
             domain=$(echo "$domain" | idn --idna-to-unicode)
+        fi
+
+        # collect all domains
+        domainList[$domain]=$targetUri
+        if [ "$externalIp" != "$ipDomain" ]; then
+            domainListAssignedStatus[$domain]=false
+        else
+            domainListAssignedStatus[$domain]=true
         fi
 
         # add protocol to domain
@@ -213,7 +226,6 @@ if $PARSE_VHOSTS; then
 
         # check assignment status
         currentDomainUnassigedString="${schemeHostsUnassignedContainer[$targetUri]}"
-                            ipDomain=$(getIpFromDomain "$domain")
 
         if [ "$externalIp" != "$ipDomain" ]; then
             if [ "$currentDomainUnassigedString" != "" ]; then

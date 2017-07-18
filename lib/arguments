@@ -15,6 +15,7 @@ COMPRESS_JSON=false
 SHOW_SYSTEM_INFORMATIONS=false
 SHOW_LINKS=false
 SHOW_SSL_CERTIFICATES=false
+SHOW_DOMAIN_LIST=false
 DOCKER_NAME=""
 PARSE_VHOSTS=true
 OUTPUT_TARGET=""
@@ -135,14 +136,19 @@ while [[ $# > 0 ]]; do
             SHOW_SYSTEM_INFORMATIONS=true
             ;;
 
-        # help:         --show-links              Shows links inside the markdown and html file
+        # help:         --show-links              Shows links inside the markdown and html file.
         --show-links)
             SHOW_LINKS=true
             ;;
 
-        # help:         --show-ssl-certificates   Shows the ssl certificates
+        # help:         --show-ssl-certificates   Shows the ssl certificates.
         --show-ssl-certificates)
             SHOW_SSL_CERTIFICATES=true
+            ;;
+
+        # help:         --show-domain-list        Shows a separated domain list.
+        --show-domain-list)
+            SHOW_DOMAIN_LIST=true
             ;;
 
         # help:
