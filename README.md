@@ -34,8 +34,13 @@ user$ cd .. && rm -rf friends-of-bash
 ```
 user$ apache-host-viewer --help
 
+An apache host viewer (v0.0.27) by Björn Hempel <bjoern@hempel.li>.
+
 Usage: apache-host-viewer [options...]
  -h,    --help                    Shows this help.
+ -v,    --version                 Shows the version number.
+
+ -l,    --only-list-domains       Only list the domains, that are available on this system.
 
  -m,    --markdown                Shows the output as markdown and disable all other output types (json, html) - default output
  -j,    --json                    Shows the output as json and disable all other output types (markdown, html)
@@ -49,7 +54,9 @@ Usage: apache-host-viewer [options...]
         --create-html             Creates a html file (--output-target must be set).
 
  -s,    --show-system-info        Shows system informations.
-        --show-links              Shows links inside the markdown and html file
+        --show-links              Shows links inside the markdown and html file.
+        --show-ssl-certificates   Shows the ssl certificates.
+        --show-domain-list        Shows a separated domain list.
 
  -d,    --docker-container        Checks a docker machine instead of the local machine.
 
