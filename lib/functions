@@ -836,3 +836,39 @@ analyzeProject()
     return 0
 }
 
+# ------------
+# Installs the live view
+#
+# @author  Björn Hempel
+# @version 1.0 (2017-05-23)
+# ------------
+installLiveView()
+{
+    local phpHelperPath="helper/php"
+    local sourcePath="$pathRoot/$phpHelperPath"
+
+    for file in $(ls -a -I . -I .. "$sourcePath"); do
+        sourceScript=$(readlink -f "$sourcePath/$file")
+        targetScript="$OUTPUT_TARGET/$file"
+
+        # delete real file
+        if [ ! -L "$targetScript" ] && [ -f "$targetScript" ]; then
+            rm "$targetScript"
+        fi
+
+        # delete symlink with wrong target
+        if [ -L "$targetScript" ]; then
+            targetSymlinkPath=$(readlink -f "$targetScript")
+
+            if [ "$targetSymlinkPath" != "$sourceScript" ]; then
+                rm "$targetScript"
+            fi
+        fi
+
+        # add symlink if the link doesn't exist
+        if [ ! -L "$targetScript" ]; then
+            ln -s "$sourceScript" "$targetScript"
+        fi
+    done
+}
+

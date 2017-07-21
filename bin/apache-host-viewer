@@ -99,6 +99,9 @@ done
 source "$pathRoot/config/paths"
 source "$pathRoot/lib/prepare"
 
+# install live view
+$INSTALL_LIVE_VIEW && installLiveView
+
 # get external ip
 externalIp=$(getExternalIp)
 

@@ -28,6 +28,7 @@ JSON_SUFFIX="json"
 HTML_SUFFIX="html"
 SILENCE=false
 ONLY_LIST_DOMAINS=false
+INSTALL_LIVE_VIEW=false
 
 # read arguments
 # help:
@@ -129,6 +130,12 @@ while [[ $# > 0 ]]; do
         --create-html=*)
             [ "${1#*=}" == "0" ] && CREATE_HTML=false || HTML_MARKDOWN=true
             ;;
+
+        # help:
+        # help:  -i,    --install-live-view       Installs the live view api.
+        -i|--install-live-view)
+             INSTALL_LIVE_VIEW=true
+             ;;
 
         # help:
         # help:  -s,    --show-system-info        Shows system informations.
