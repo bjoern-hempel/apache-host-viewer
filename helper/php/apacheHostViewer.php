@@ -62,6 +62,16 @@ class ApacheHostViewer
         $appName      = exec('friends-of-bash version apache-host-viewer');
         $osName       = exec('friends-of-bash osName');
 
+        $totalRam       = intval(exec('free -b | awk \'$1=="Mem:"{print $2}\''));
+        $usedRam        = intval(exec('free -b | awk \'$1=="Mem:"{print $3}\''));
+        $usedRamPercent = round($usedRam * 100 / $totalRam, 1);
+
+        $tasksTotal    = intval(exec('top -bn1 | grep zombie | awk \'{print $2}\''));
+        $tasksRunning  = intval(exec('top -bn1 | grep zombie | awk \'{print $4}\''));
+        $tasksSleeping = intval(exec('top -bn1 | grep zombie | awk \'{print $6}\''));
+        $tasksStopped  = intval(exec('top -bn1 | grep zombie | awk \'{print $8}\''));
+        $tasksZombie   = intval(exec('top -bn1 | grep zombie | awk \'{print $10}\''));
+
         $response = array();
 
         $response = array_merge(
@@ -77,6 +87,24 @@ class ApacheHostViewer
                     5  => $load[1],
                     15 => $load[2],
                 ),
+                'hd' => array(
+
+                ),
+                'ram' => array(
+                    'total'        => $totalRam,
+                    'total-mb'     => round($totalRam / 1024 / 1024, 1),
+                    'used'         => $usedRam,
+                    'used-mb'      => round($usedRam / 1024 / 1024, 1),
+                    'used-percent' => $usedRamPercent,
+                    'free-percent' => 100 - $usedRamPercent,
+                ),
+                'tasks' => array(
+                    'total'    => $tasksTotal,
+                    'running'  => $tasksRunning,
+                    'sleeping' => $tasksSleeping,
+                    'stopped'  => $tasksStopped,
+                    'zombie'   => $tasksZombie,
+                )
             )
         );
 
