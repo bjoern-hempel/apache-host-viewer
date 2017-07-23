@@ -150,9 +150,9 @@ class ApacheHostViewer
             'hds' => $hds,
             'ram' => array(
                 'total'        => $ramTotal,
-                'total-mb'     => round($ramTotal / 1024 / 1024, 1),
+                'total-gb'     => round($ramTotal / 1024 / 1024 / 1024, 1),
                 'used'         => $ramUsed,
-                'used-mb'      => round($ramUsed / 1024 / 1024, 1),
+                'used-gb'      => round($ramUsed / 1024 / 1024 / 1024, 1),
                 'used-percent' => $ramUsedPercent,
                 'free-percent' => 100 - $ramUsedPercent,
             ),
