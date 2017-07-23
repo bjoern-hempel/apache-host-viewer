@@ -49,67 +49,130 @@ class ApacheHostViewer
     }
 
     /**
+     * Returns the overall status.
+     *
+     * @version 1.0 (2017-07-23)
+     */
+    public static function getStatusOverall()
+    {
+        $statusOverall = 'ok';
+
+        foreach (func_get_args() as $status) {
+            if ($status === 'warn' && $statusOverall === 'ok') {
+                $statusOverall = $status;
+            }
+
+            if ($status === 'critical') {
+                $statusOverall = $status;
+            }
+        }
+
+        return $statusOverall;
+    }
+
+    /**
      * Returns the live.json.
      *
      * @version 1.0 (2017-07-21)
      */
     public static function getLiveValues()
     {
+        $loadStatusCritical = 1;
+        $loadStatusWarn     = 0.8; 
+
+        $ramStatusCritical = 95;
+        $ramStatusWarn     = 85;
+
+        $hdStatusCritical = 95;
+        $hdStatusWarn     = 1;
+
         /* collect some informations */
         $load         = sys_getloadavg();
+        $loadStatus   = 'ok';
+        $loadStatus   = self::getStatusOverall($loadStatus, $load[0] >= $loadStatusCritical ? 'critical' : ($load[0] >= $loadStatusWarn ? 'warn' : 'ok'));
+        $loadStatus   = self::getStatusOverall($loadStatus, $load[1] >= $loadStatusCritical ? 'critical' : ($load[1] >= $loadStatusWarn ? 'warn' : 'ok'));
+        $loadStatus   = self::getStatusOverall($loadStatus, $load[2] >= $loadStatusCritical ? 'critical' : ($load[2] >= $loadStatusWarn ? 'warn' : 'ok'));
         $time         = time();
         $timeFormated = date('Y-m-d H:i:s');
         $appName      = exec('friends-of-bash version apache-host-viewer');
         $osName       = exec('friends-of-bash osName');
 
-        $totalRam       = intval(exec('free -b | awk \'$1=="Mem:"{print $2}\''));
-        $usedRam        = intval(exec('free -b | awk \'$1=="Mem:"{print $3}\''));
-        $usedRamPercent = round($usedRam * 100 / $totalRam, 1);
+        $ramTotal       = intval(exec('free -b | awk \'$1=="Mem:"{print $2}\''));
+        $ramUsed        = intval(exec('free -b | awk \'$1=="Mem:"{print $3}\''));
+        $ramUsedPercent = round($ramUsed * 100 / $ramTotal, 1);
+        $ramStatus      = $ramUsedPercent < $ramStatusWarn ? 'ok' : ($ramUsedPercent < $ramStatusCritical ? 'warn' : 'critical');
 
         $tasksTotal    = intval(exec('top -bn1 | grep zombie | awk \'{print $2}\''));
         $tasksRunning  = intval(exec('top -bn1 | grep zombie | awk \'{print $4}\''));
         $tasksSleeping = intval(exec('top -bn1 | grep zombie | awk \'{print $6}\''));
         $tasksStopped  = intval(exec('top -bn1 | grep zombie | awk \'{print $8}\''));
         $tasksZombie   = intval(exec('top -bn1 | grep zombie | awk \'{print $10}\''));
+        $tasksStatus   = $tasksZombie > 0 ? 'warn' : 'ok';
 
-        $response = array();
+        exec('df -T -B1 | tail -n +2 | awk \'$2~/^ext[0-9]/{print $1,$7,$2,$3,$4}\'', $hdsResult);
+        $hds = array();
+        $hdsStatus = 'ok';
+        foreach ($hdsResult as $hdResult) {
+            $hd = array_combine(array('device', 'mount', 'fs', 'total', 'used'), explode(' ', $hdResult));
 
-        $response = array_merge(
-            $response,
-            array(
-                'timezone'            => date_default_timezone_get(),
-                'created-at-formated' => $timeFormated,
-                'created-at'          => $time,
-                'created-by'          => $appName,
-                'os-name-full'        => $osName,
-                'load-average'        => array(
-                    1  => $load[0],
-                    5  => $load[1],
-                    15 => $load[2],
-                ),
-                'hd' => array(
+            $totalHd       = intval($hd['total']);
+            $usedHd        = intval($hd['used']);
+            $usedHdPercent = round($usedHd * 100 / $totalHd, 1);
+            $hdStatus      = $usedHdPercent < $hdStatusWarn ? 'ok' : ($usedHdPercent < $hdStatusCritical ? 'warn' : 'critical');
 
+            $hdsStatus = self::getStatusOverall($hdsStatus, $hdStatus);
+
+            $hds[$hd['mount']] = array(
+                'device'       => $hd['device'],
+                'mount'        => $hd['mount'],
+                'fs'           => $hd['fs'],
+                'total'        => $totalHd,
+                'total-gb'     => round($totalHd / 1024 / 1024 / 1024, 1),
+                'used'         => $usedHd,
+                'used-gb'      => round($usedHd / 1024 / 1024 / 1024, 1),
+                'used-percent' => $usedHdPercent,
+                'free-percent' => 100 - $usedHdPercent,
+                'status'       => $hdStatus,
+            );
+        }
+
+        return array(
+            'timezone'            => date_default_timezone_get(),
+            'created-at-formated' => $timeFormated,
+            'created-at'          => $time,
+            'created-by'          => $appName,
+            'os-name-full'        => $osName,
+            'load-average'        => array(
+                1  => $load[0],
+                5  => $load[1],
+                15 => $load[2],
+            ),
+            'hds' => $hds,
+            'ram' => array(
+                'total'        => $ramTotal,
+                'total-mb'     => round($ramTotal / 1024 / 1024, 1),
+                'used'         => $ramUsed,
+                'used-mb'      => round($ramUsed / 1024 / 1024, 1),
+                'used-percent' => $ramUsedPercent,
+                'free-percent' => 100 - $ramUsedPercent,
+            ),
+            'tasks' => array(
+                'total'    => $tasksTotal,
+                'running'  => $tasksRunning,
+                'sleeping' => $tasksSleeping,
+                'stopped'  => $tasksStopped,
+                'zombie'   => $tasksZombie,
+            ),
+            'status' => array(
+                'overall'  => self::getStatusOverall($loadStatus, $hdsStatus, $ramStatus, $tasksStatus),
+                'detailed' => array(
+                    'load-average'    => $loadStatus,
+                    'space-available' => $hdsStatus,
+                    'ram'             => $ramStatus,
+                    'task'            => $tasksStatus,
                 ),
-                'ram' => array(
-                    'total'        => $totalRam,
-                    'total-mb'     => round($totalRam / 1024 / 1024, 1),
-                    'used'         => $usedRam,
-                    'used-mb'      => round($usedRam / 1024 / 1024, 1),
-                    'used-percent' => $usedRamPercent,
-                    'free-percent' => 100 - $usedRamPercent,
-                ),
-                'tasks' => array(
-                    'total'    => $tasksTotal,
-                    'running'  => $tasksRunning,
-                    'sleeping' => $tasksSleeping,
-                    'stopped'  => $tasksStopped,
-                    'zombie'   => $tasksZombie,
-                )
-            )
+            ),
         );
-
-        /* return the response object */
-        return $response;
     }
 
     /**
