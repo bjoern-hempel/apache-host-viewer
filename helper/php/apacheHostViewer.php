@@ -84,7 +84,7 @@ class ApacheHostViewer
         $ramStatusWarn     = 85;
 
         $hdStatusCritical = 95;
-        $hdStatusWarn     = 1;
+        $hdStatusWarn     = 85;
 
         /* collect some informations */
         $load         = sys_getloadavg();
