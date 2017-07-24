@@ -34,7 +34,7 @@ user$ cd .. && rm -rf friends-of-bash
 ```
 user$ apache-host-viewer --help
 
-An apache host viewer (v0.0.27) by Björn Hempel <bjoern@hempel.li>.
+An apache host viewer (v0.0.36) by Björn Hempel <bjoern@hempel.li>.
 
 Usage: apache-host-viewer [options...]
  -h,    --help                    Shows this help.
@@ -52,6 +52,8 @@ Usage: apache-host-viewer [options...]
         --create-markdown         Creates a markdown file (--output-target must be set).
         --create-json             Creates a json file (--output-target must be set).
         --create-html             Creates a html file (--output-target must be set).
+
+ -i,    --install-live-view       Installs the live view api.
 
  -s,    --show-system-info        Shows system informations.
         --show-links              Shows links inside the markdown and html file.
