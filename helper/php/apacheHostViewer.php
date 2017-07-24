@@ -35,11 +35,15 @@ class ApacheHostViewer
         /* do some uri specific datas */
         switch ($requestedFile) {
             case 'live.json':
-                ApacheHostViewer::printJsonLiveValues();
+                self::printJsonLiveValues();
                 break;
 
             case 'update.json':
-                ApacheHostViewer::printJsonUpdateStatus();
+                self::printJsonUpdateStatus();
+                break;
+
+            case 'update-library.json':
+                self::printJsonUpdateLibrary();
                 break;
 
             default:
@@ -190,9 +194,9 @@ class ApacheHostViewer
         return array_merge(
             $array,
             array(
-                'timezone'            => date_default_timezone_get(),
                 'created-at-formated' => $timeFormated,
                 'created-at'          => $time,
+                'timezone'            => date_default_timezone_get(),
                 'status'              => $status,
                 'message'             => $message,
             )
@@ -365,6 +369,27 @@ HINTS;
     }
 
     /**
+     * Updates the friends of bash libraries.
+     *
+     * @version 1.0 (2017-07-21)
+     */
+    public static function getUpdateLibrary()
+    {
+        /* Update all libraries */
+        exec('friends-of-bash update all -y');
+
+        /* Get library list */
+        exec('friends-of-bash list -s', $applications);
+
+        return self::getMessageStatus(
+            'The friends of bash libraries were updated successfully.',
+            array(
+                'applications' => $applications,
+            )
+        );
+    }
+
+    /**
      * Prints the given data object as json object. Also adds the json header.
      *
      * @version 1.0 (2017-07-21)
@@ -394,6 +419,16 @@ HINTS;
     public static function printJsonUpdateStatus()
     {
         self::printJson(self::getUpdateStatus());
+    }
+
+    /**
+     * Prints the update library status.
+     *
+     * @version 1.0 (2017-07-25)
+     */
+    public static function printJsonUpdateLibrary()
+    {
+        self::printJson(self::getUpdateLibrary());
     }
 
     /**
