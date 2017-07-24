@@ -390,6 +390,7 @@ getMarkdownOfSystemAndDocumentRoots()
                 echo "false"
             fi
         done
+        echo
     fi
 
     if $SHOW_LINKS; then
@@ -399,6 +400,9 @@ getMarkdownOfSystemAndDocumentRoots()
             echo "Show this document as json file: [$OUTPUT_NAME.$JSON_SUFFIX]($OUTPUT_NAME.$JSON_SUFFIX)"
         fi
         echo "Show this document as markdown file: [$OUTPUT_NAME.$MARKDOWN_SUFFIX]($OUTPUT_NAME.$MARKDOWN_SUFFIX)"
+        if $INSTALL_LIVE_VIEW; then
+            echo "Show live view as json file: [live.$JSON_SUFFIX](live.$JSON_SUFFIX)"
+        fi
         echo
     fi
 }

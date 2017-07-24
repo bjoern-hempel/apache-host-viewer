@@ -94,8 +94,9 @@ class ApacheHostViewer
         $loadStatus   = self::getStatusOverall($loadStatus, $load[2] >= $loadStatusCritical ? 'critical' : ($load[2] >= $loadStatusWarn ? 'warn' : 'ok'));
         $time         = time();
         $timeFormated = date('Y-m-d H:i:s');
-        $appName      = exec('friends-of-bash version apache-host-viewer');
+        $appName      = sprintf('%s', exec('friends-of-bash version apache-host-viewer'));
         $osName       = exec('friends-of-bash osName');
+        $hostname     = gethostname();
 
         $ramTotal       = intval(exec('free -b | awk \'$1=="Mem:"{print $2}\''));
         $ramUsed        = intval(exec('free -b | awk \'$1=="Mem:"{print $3}\''));
@@ -137,11 +138,21 @@ class ApacheHostViewer
         }
 
         return array(
-            'timezone'            => date_default_timezone_get(),
             'created-at-formated' => $timeFormated,
             'created-at'          => $time,
             'created-by'          => $appName,
             'os-name-full'        => $osName,
+            'hostname'            => $hostname,
+            'timezone'            => date_default_timezone_get(),
+            'status' => array(
+                'overall'  => self::getStatusOverall($loadStatus, $hdsStatus, $ramStatus, $tasksStatus),
+                'detailed' => array(
+                    'load-average'    => $loadStatus,
+                    'space-available' => $hdsStatus,
+                    'ram'             => $ramStatus,
+                    'task'            => $tasksStatus,
+                ),
+            ),
             'load-average'        => array(
                 1  => $load[0],
                 5  => $load[1],
@@ -162,15 +173,6 @@ class ApacheHostViewer
                 'sleeping' => $tasksSleeping,
                 'stopped'  => $tasksStopped,
                 'zombie'   => $tasksZombie,
-            ),
-            'status' => array(
-                'overall'  => self::getStatusOverall($loadStatus, $hdsStatus, $ramStatus, $tasksStatus),
-                'detailed' => array(
-                    'load-average'    => $loadStatus,
-                    'space-available' => $hdsStatus,
-                    'ram'             => $ramStatus,
-                    'task'            => $tasksStatus,
-                ),
             ),
         );
     }
