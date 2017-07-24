@@ -401,6 +401,8 @@ getMarkdownOfSystemAndDocumentRoots()
         fi
         echo "Show this document as markdown file: [$OUTPUT_NAME.$MARKDOWN_SUFFIX]($OUTPUT_NAME.$MARKDOWN_SUFFIX)"
         if $INSTALL_LIVE_VIEW; then
+            echo "Update this document: [update.$JSON_SUFFIX](update.$JSON_SUFFIX)"
+            echo "Update the friends of bash libraries: [update-library.$JSON_SUFFIX](update-library.$JSON_SUFFIX)"
             echo "Show live view as json file: [live.$JSON_SUFFIX](live.$JSON_SUFFIX)"
         fi
         echo
