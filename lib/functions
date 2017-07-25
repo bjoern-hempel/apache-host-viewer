@@ -878,3 +878,23 @@ installLiveView()
     done
 }
 
+# ------------
+# Installs the user file
+#
+# @author  Björn Hempel
+# @version 1.0 (2017-05-25)
+# ------------
+installUserFile()
+{
+    local userFileName=".user"
+
+    local outputTarget="$1"
+    local username="$2"
+
+    if [ "$outputTarget" == "" ]; then
+        return 0
+    fi
+
+    echo "$username" > "$outputTarget/$userFileName"
+}
+

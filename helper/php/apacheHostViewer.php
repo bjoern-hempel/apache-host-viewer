@@ -505,7 +505,7 @@ HINTS
 
         $documentRoot = $_SERVER['DOCUMENT_ROOT'];
 
-        $userfilePath = sprintf('%s/%s', $documentRoot, $userfile);
+        $userfilePath = sprintf('%s/%s/%s', $documentRoot, 'server', $userfile);
 
         if (!file_exists($userfilePath)) {
             return self::getMessageStatus(

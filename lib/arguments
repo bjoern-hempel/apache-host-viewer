@@ -29,6 +29,8 @@ HTML_SUFFIX="html"
 SILENCE=false
 ONLY_LIST_DOMAINS=false
 INSTALL_LIVE_VIEW=false
+INSTALL_USER_FILE=false
+USER_FILE_USER=""
 
 # read arguments
 # help:
@@ -134,8 +136,19 @@ while [[ $# > 0 ]]; do
         # help:
         # help:  -i,    --install-live-view       Installs the live view api.
         -i|--install-live-view)
-             INSTALL_LIVE_VIEW=true
-             ;;
+            INSTALL_LIVE_VIEW=true
+            ;;
+
+        # help:         --install-user-file       Installs the user file into the output target.
+        --install-user-file)
+            INSTALL_USER_FILE=true
+            USER_FILE_USER="$2"
+            shift
+            ;;
+        --install-user-file=*)
+            INSTALL_USER_FILE=true
+            USER_FILE_USER="${1#*=}"
+            ;;
 
         # help:
         # help:  -s,    --show-system-info        Shows system informations.

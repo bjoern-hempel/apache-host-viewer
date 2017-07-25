@@ -99,8 +99,16 @@ done
 source "$pathRoot/config/paths"
 source "$pathRoot/lib/prepare"
 
-# install live view
+# create output target folder
+if [ "$OUTPUT_TARGET" != "" ]; then
+    if [ ! -d "$OUTPUT_TARGET" ]; then
+        mkdir -p "$OUTPUT_TARGET"
+    fi
+fi
+
+# install live view && user file
 $INSTALL_LIVE_VIEW && installLiveView
+$INSTALL_USER_FILE && installUserFile "$OUTPUT_TARGET" "$USER_FILE_USER"
 
 # get external ip
 externalIp=$(getExternalIp)
