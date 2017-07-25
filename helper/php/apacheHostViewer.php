@@ -376,7 +376,7 @@ HINTS;
     public static function getUpdateLibrary()
     {
         /* Update all libraries */
-        exec('friends-of-bash update all -y');
+        exec('sudo -u bjoern friends-of-bash update all -y', $output);
 
         /* Get library list */
         exec('friends-of-bash list -s', $applications);
@@ -385,6 +385,7 @@ HINTS;
             'The friends of bash libraries were updated successfully.',
             array(
                 'applications' => $applications,
+                'output'       => $output,
             )
         );
     }
