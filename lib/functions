@@ -238,6 +238,7 @@ getMarkdownOfSystemAndDocumentRoots()
         local overallStatus=$(getOverallStatus "$loadAverageStatus" "$hdSizeStatus" "$unassignedDomainStatus" "$sslOverallStatus")
         local apps=$(friends-of-bash list)
         local version=$(getRepositoryVersion "$pathRoot")
+        local crontab=$(cat /etc/crontab | grep -v "^#" | grep "apache-host-viewer" | sed -e "s/^.*apache-host-viewer/apache-host-viewer/g")
 
         echo '## System status'
         echo
@@ -267,6 +268,13 @@ getMarkdownOfSystemAndDocumentRoots()
         echo '| php version | '$(getPhpVersion)' |'
         echo '| mysql version | '$(getMysqlVersion)' |'
         echo '| load average | '$(getLoadAverage1min)' '$(getLoadAverage5min)' '$(getLoadAverage15min)' |'
+        echo
+
+        echo '## Other informations'
+        echo
+        echo '| Name | Value |'
+        echo '| ---- | ----- |'
+        echo '| crontab | '$crontab' |'
         echo
 
         if ! applicationExists "jq"; then
@@ -428,6 +436,7 @@ getJsonOfSystemAndDocumentRoots()
         local overallStatus=$(getOverallStatus "$loadAverageStatus" "$hdSizeStatus" "$unassignedDomainStatus" "$sslOverallStatus")
         local version=$(getRepositoryVersion "$pathRoot")
         local apps=$(friends-of-bash list)
+        local crontab=$(cat /etc/crontab | grep -v "^#" | grep "apache-host-viewer" | sed -e "s/^.*apache-host-viewer/apache-host-viewer/g")
 
         echo '    "created-at-formated":           "'$(date "+%Y-%m-%d %H:%M:%S")'",'
         echo '    "created-at":                    "'$(date "+%s")'",'
@@ -462,6 +471,7 @@ getJsonOfSystemAndDocumentRoots()
         echo '                                         "5":                 "'$(getLoadAverage5min)'",'
         echo '                                         "15":                "'$(getLoadAverage15min)'"'
         echo '                                     },'
+        echo '    "crontab":                       "'$crontab'",'
         echo '    "status":                        {'
         echo '                                         "overall":  "'$overallStatus'",'
         echo '                                         "detailed": {'
