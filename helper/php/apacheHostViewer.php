@@ -1,5 +1,7 @@
 <?php
 
+namespace AHV;
+
 /**
  * An apache host viewer php helper class.
  *
@@ -14,7 +16,7 @@ class ApacheHostViewer
      * @version 1.0 (2017-07-21)
      */
     public static function initialize()
-    {   
+    {
         /* set timezone */
         date_default_timezone_set('Europe/Berlin');
     }
@@ -82,7 +84,7 @@ class ApacheHostViewer
     public static function getLiveValues()
     {
         $loadStatusCritical = 1;
-        $loadStatusWarn     = 0.8; 
+        $loadStatusWarn     = 0.8;
 
         $ramStatusCritical = 95;
         $ramStatusWarn     = 85;
@@ -93,9 +95,18 @@ class ApacheHostViewer
         /* collect some informations */
         $load         = sys_getloadavg();
         $loadStatus   = 'ok';
-        $loadStatus   = self::getStatusOverall($loadStatus, $load[0] >= $loadStatusCritical ? 'critical' : ($load[0] >= $loadStatusWarn ? 'warn' : 'ok'));
-        $loadStatus   = self::getStatusOverall($loadStatus, $load[1] >= $loadStatusCritical ? 'critical' : ($load[1] >= $loadStatusWarn ? 'warn' : 'ok'));
-        $loadStatus   = self::getStatusOverall($loadStatus, $load[2] >= $loadStatusCritical ? 'critical' : ($load[2] >= $loadStatusWarn ? 'warn' : 'ok'));
+        $loadStatus   = self::getStatusOverall(
+            $loadStatus,
+            $load[0] >= $loadStatusCritical ? 'critical' : ($load[0] >= $loadStatusWarn ? 'warn' : 'ok')
+        );
+        $loadStatus   = self::getStatusOverall(
+            $loadStatus,
+            $load[1] >= $loadStatusCritical ? 'critical' : ($load[1] >= $loadStatusWarn ? 'warn' : 'ok')
+        );
+        $loadStatus   = self::getStatusOverall(
+            $loadStatus,
+            $load[2] >= $loadStatusCritical ? 'critical' : ($load[2] >= $loadStatusWarn ? 'warn' : 'ok')
+        );
         $time         = time();
         $timeFormated = date('Y-m-d H:i:s');
         $appName      = sprintf('%s', exec('friends-of-bash version apache-host-viewer'));
@@ -105,7 +116,9 @@ class ApacheHostViewer
         $ramTotal       = intval(exec('free -b | awk \'$1=="Mem:"{print $2}\''));
         $ramUsed        = intval(exec('free -b | awk \'$1=="Mem:"{print $3}\''));
         $ramUsedPercent = round($ramUsed * 100 / $ramTotal, 1);
-        $ramStatus      = $ramUsedPercent < $ramStatusWarn ? 'ok' : ($ramUsedPercent < $ramStatusCritical ? 'warn' : 'critical');
+        $ramStatus      = $ramUsedPercent < $ramStatusWarn ?
+            'ok' :
+            ($ramUsedPercent < $ramStatusCritical ? 'warn' : 'critical');
 
         $tasksTotal    = intval(exec('top -bn1 | grep zombie | awk \'{print $2}\''));
         $tasksRunning  = intval(exec('top -bn1 | grep zombie | awk \'{print $4}\''));
@@ -123,7 +136,9 @@ class ApacheHostViewer
             $totalHd       = intval($hd['total']);
             $usedHd        = intval($hd['used']);
             $usedHdPercent = round($usedHd * 100 / $totalHd, 1);
-            $hdStatus      = $usedHdPercent < $hdStatusWarn ? 'ok' : ($usedHdPercent < $hdStatusCritical ? 'warn' : 'critical');
+            $hdStatus      = $usedHdPercent < $hdStatusWarn ?
+                'ok' :
+                ($usedHdPercent < $hdStatusCritical ? 'warn' : 'critical');
 
             $hdsStatus = self::getStatusOverall($hdsStatus, $hdStatus);
 
@@ -192,14 +207,14 @@ class ApacheHostViewer
         $timeFormated = date('Y-m-d H:i:s');
 
         return array_merge(
-            $array,
             array(
                 'created-at-formated' => $timeFormated,
                 'created-at'          => $time,
                 'timezone'            => date_default_timezone_get(),
                 'status'              => $status,
                 'message'             => $message,
-            )
+            ),
+            $array
         );
     }
 
@@ -237,18 +252,156 @@ class ApacheHostViewer
             $apacheHostViewerUpdateCommand = $apacheHostViewerUpdateCommandDefault;
         }
 
-        return sprintf('%s %s', 'sudo', $apacheHostViewerUpdateCommand);
+        /* get some user informations */
+        $user     = posix_getpwuid(posix_geteuid());
+        $username = $user['name'];
+
+        $statusMessages = array(
+            'success' => 'The command was executed successfully.',
+        );
+
+        $hints = array(
+                'command-error' => <<<HINTS
+<h3>A command error occurred. :(</h3>
+
+<p>
+    The command was not executed successfully.
+    Have you allowed the user "$username" to sudo the script "apache-host-viewer" (visudo)?
+    Please try something like this:
+</p>
+
+<pre>
+sudo vi /etc/sudoers
+</pre>
+
+<pre>
+# some scripts www-data is allowed to execute as www-data
+www-data ALL=NOPASSWD:/usr/local/bin/apache-host-viewer
+</pre>
+
+<p>
+    <a href="/server">Go back to server page.</a>
+</p>
+HINTS
+        ,
+                'success' => <<<HINTS
+<h3>Success. :)</h3>
+
+<p>The apache host viewer data base was successfully updated.</p>
+
+<p><a href="/server">Go back to server page.</a></p>
+HINTS
+        ,
+        );
+
+        return array(
+            'command'        => sprintf('%s %s', 'sudo', $apacheHostViewerUpdateCommand),
+            'statusMessages' => $statusMessages,
+            'hints'          => $hints,
+        );
+    }
+
+    /** 
+     * Gets the friends-of-bash update library command.
+     *
+     * @version 1.0 (2017-07-25)
+     */
+    public static function getUpdateLibraryCommand($sudoUser)
+    {
+        /* default command */
+        $updateLibraryCommand = 'friends-of-bash update all -y';
+
+        /* get some user informations */
+        $user   = posix_getpwuid(posix_geteuid());
+        $username = $user['name'];
+
+        $statusMessages = array();
+
+        $hints = array(
+                'command-error' => <<<HINTS
+<h3>A command error occurred. :(</h3>
+
+<p>
+    The command was not executed successfully.
+    Have you allowed the user "$username" to sudo (-u $sudoUser) the script "friends-of-bash" (visudo)?
+    Please try something like this:
+</p>
+
+<pre>
+sudo vi /etc/sudoers
+</pre>
+
+<pre>
+# some scripts www-data is allowed to execute as www-data
+www-data ALL=($sudoUser:$sudoUser) NOPASSWD:/usr/local/bin/friends-of-bash
+</pre>
+
+<p>
+    <a href="/server">Go back to server page.</a>
+</p>
+HINTS
+        ,
+                'success' => <<<HINTS
+<h3>Success. :)</h3>
+
+<p>The apache host viewer data base was successfully updated.</p>
+
+<p><a href="/server">Go back to server page.</a></p>
+HINTS
+        ,
+        );
+
+        return array(
+            'command'        => sprintf('%s %s', 'sudo -u bjoern', $updateLibraryCommand),
+            'statusMessages' => $statusMessages,
+            'hints'          => $hints,
+        );
     }
 
     /**
-     * Updates the apache host viewer data base.
+     * Update the given command.
      *
-     * @version 1.0 (2017-07-21)
+     * @version 1.0 (2017-07-25)
      */
-    public static function getUpdateStatus()
+    public static function executeCommand($command, Array $statusMessages = array(), Array $hints = array())
     {
-        /* the command itself */
-        $command = self::getUpdateCommand();
+        $statusMessages = array_merge(
+            array(
+                'general-error' => 'An error occurred, while trying to do the update.'.
+                    'The proc_open ressource could not be opened.',
+                'command-error' => 'The command was not executed successfully and returns the status code %d.',
+                'success'       => 'The command was executed successfully.',
+            ),
+            $statusMessages
+        );
+
+        $hints = array_merge(
+            array(
+                'general-error' => <<<HINTS
+<h3>An error occurred. :(</h3>
+
+<p><a href="/server">Go back to server page.</a></p>
+HINTS
+        ,
+                'command-error' => <<<HINTS
+<h3>A command error occurred. :(</h3>
+
+<p>The command was not executed successfully.</p>
+
+<p><a href="/server">Go back to server page.</a></p>
+HINTS
+        ,
+                'success' => <<<HINTS
+<h3>Success. :)</h3>
+
+<p>The apache host viewer data base was successfully updated.</p>
+
+<p><a href="/server">Go back to server page.</a></p>
+HINTS
+        ,
+            ),
+            $hints
+        );
 
         /* the working directory */
         $cwd = '/opt/friends-of-bash';
@@ -261,14 +414,10 @@ class ApacheHostViewer
 
         /* the pipe config (read input, write stdout and stderr */
         $descriptorspec = array(
-            0 => array("pipe", "r"),
-            1 => array("pipe", "w"),
-            2 => array("pipe", "w")
+            0 => array('pipe', 'r'),
+            1 => array('pipe', 'w'),
+            2 => array('pipe', 'w'),
         );
-
-        /* user */
-        $userid = posix_geteuid();
-        $user   = posix_getpwuid(posix_geteuid());
 
         /* open the command */
         $process = proc_open($command, $descriptorspec, $pipes, $cwd, $env);
@@ -280,22 +429,12 @@ class ApacheHostViewer
 
         /* resource is not available */
         if (!is_resource($process)) {
-            $hints = <<<HINTS
-<p>
-    An error occurred. :(
-</p>
-
-<p>
-    <a href="/server">Go back to server page.</a>
-</p>
-HINTS;
-        
             return self::getMessageStatus(
-                'An error occurred, while trying to do the update. The proc_open ressource could not be opened.',
+                $statusMessages['general-error'],
                 'failed',
                 array(
                     'command' => $command,
-                    'hints'   => $hints,
+                    'hints'   => $hints['general-error'],
                 )
             );
         }
@@ -317,55 +456,42 @@ HINTS;
 
         /* an error occurred */
         if ($retval > 0) {
-            $hints = <<<HINTS
-<p>
-    The command was not executed successfully.
-    Have you allowed the script "apache-host-viewer" to user "%s" (visudo)?
-    Please try something like this:
-</p>
-
-<pre>
-sudo vi /etc/sudoers
-</pre>
-
-<pre>
-# some scripts www-data is allowed to execute as www-data
-www-data ALL=NOPASSWD:/usr/local/bin/apache-host-viewer
-</pre>
-
-<p>
-    <a href="/server">Go back to server page.</a>
-</p>
-HINTS;
-
             return self::getMessageStatus(
-                sprintf('The command was not executed successfully and returns the status code %d.', $retval),
+                sprintf($statusMessages['command-error'], $retval),
                 'failed',
                 array(
                     'command' => $command,
-                    'hints'   => sprintf($hints, $user['name']),
+                    'stdout'  => $stdout,
+                    'stderr'  => $stderr,
+                    'hints'   => $hints['command-error'],
                 )
             );
         }
 
-        $hints = <<<HINTS
-<p>
-    The apache host viewer data base was successfully updated.
-</p>
-
-<p>
-    <a href="/server">Go back to server page.</a>
-</p>
-HINTS;
-
         return self::getMessageStatus(
-            'The apache host viewer data base was successfully updated.',
+            $statusMessages['success'],
             'success',
             array(
                 'command' => $command,
-                'hints'   => $hints,
+                'stdout'  => $stdout,
+                'stderr'  => $stderr,
+                'hints'   => $hints['success'],
             )
         );
+    }
+
+    /**
+     * Updates the apache host viewer data base.
+     *
+     * @version 1.0 (2017-07-21)
+     */
+    public static function getUpdateStatus()
+    {
+        /* get the command */
+        $command = self::getUpdateCommand();
+
+        /* execute command */
+        return self::executeCommand($command['command'], $command['statusMessages'], $command['hints']);
     }
 
     /**
@@ -375,17 +501,68 @@ HINTS;
      */
     public static function getUpdateLibrary()
     {
+        $userfile = '.user';
+
+        $documentRoot = $_SERVER['DOCUMENT_ROOT'];
+
+        $userfilePath = sprintf('%s/%s', $documentRoot, $userfile);
+
+        if (!file_exists($userfilePath)) {
+            return self::getMessageStatus(
+                sprintf(
+                    'The userfile "%s" was not found. '.
+                    'Within this file have to specify which user should call the friends-of-bash command.',
+                    $userfilePath
+                ),
+                'failed'
+            );
+        }
+
+        $username = file_get_contents($userfilePath);
+        list($username) = preg_split('~[^a-z0-9_-]~i', $username);
+
+        if ($username === '') {
+            return self::getMessageStatus(
+                sprintf('The userfile "%s" is empty.', $userfilePath),
+                'failed'
+            );
+        }
+
+        $user = posix_getpwnam($username);
+
+        if ($user === false) {
+            return self::getMessageStatus(
+                sprintf('The user "%s" does not exist on this system.', $username),
+                'failed'
+            );
+        }
+
+        if ($username === 'root') {
+            return self::getMessageStatus(
+                sprintf('It is not allowed to use the user "%s" within the file "%s".', $username, $userfilePath),
+                'failed'
+            );
+        }
+
+        /* get the command */
+        $command = self::getUpdateLibraryCommand($username);
+
         /* Update all libraries */
-        exec('sudo -u bjoern friends-of-bash update all -y', $output);
+        $result = self::executeCommand($command['command'], $command['statusMessages'], $command['hints']);
+
+        $message = $result['status'] === 'success' ?
+            'The friends of bash libraries were updated successfully.' :
+            'The friends of bash libraries weren\'t updated successfully.';
 
         /* Get library list */
         exec('friends-of-bash list -s', $applications);
 
         return self::getMessageStatus(
-            'The friends of bash libraries were updated successfully.',
+            $message,
+            $result['status'],
             array(
-                'applications' => $applications,
-                'output'       => $output,
+                'update-result' => $result,
+                'applications'  => $applications,
             )
         );
     }
@@ -406,7 +583,7 @@ HINTS;
      * Prints the live values.
      *
      * @version 1.0 (2017-07-21)
-     */ 
+     */
     public static function printJsonLiveValues()
     {
         self::printJson(self::getLiveValues());
@@ -445,4 +622,3 @@ HINTS;
 
 /* start the apache host viewer controller */
 ApacheHostViewer::controller();
-
